@@ -1,0 +1,12 @@
+Files:
+    - Server.py – Runs a server on localhost port 8000
+        Run: python3 Server.py
+
+    - Client.py – Connects to a server on localhost port 8000
+        Run: python3 Client.py [host port]
+
+What does the server do:
+    This version of the server accepts connections from multiple clients,
+    when clients send messages, the server sends them back in all caps.
+    This is only a test, these need to be seriously rewritten (and better
+    documented.)
