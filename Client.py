@@ -4,6 +4,11 @@ import sys
 import threading
 
 
+class ServerDead(Exception):
+    """ Raised if the server goes down :( """
+    pass
+
+
 class Client:
     def __init__(self):
         self._HOST, self._PORT = (None, None)
@@ -69,9 +74,16 @@ class Client:
 
             for key, mask in events:
                 if mask == selectors.EVENT_READ:
-                    message = self.get_message()
+                    message = ""
 
                     # If the message is None, the server is disconnected
+                    try:
+                        message = self.get_message()
+                    except:
+                        print("Server disconnected")
+                        self.close()
+                        break
+
                     if message is None:
                         print("Server Disconnected")
                         self.close()
@@ -94,7 +106,9 @@ class Client:
 
             # Attempt to send the message to the server
             # If it doesn't work, the connection is closed
-            if not self.send_message(message):
+            try:
+                self.send_message(message)
+            except:
                 print("Server disconnected")
                 self.close()
 
@@ -131,22 +145,23 @@ class Client:
         """
             get_message - receives and returns a message from the server
 
-            returns - the decoded method received from the server, or None
-                      if the server is disconnected
+            returns - the decoded method received from the server
+
+            raises - ServerDead if the connection fails
         """
         # Get the message header, says how long the expected message is
         header = self._sock.recv(self._HEADER_LENGTH)
 
         # If the header is the empty string, the server is closed
         if header.strip() == b'':
-            return None
+            raise ServerDead
         else:
             # Receive a message of the correct length
             header = int(header.decode("utf-8").strip())
             message = self._sock.recv(header).decode()
 
             if message == "":
-                return None
+                raise ServerDead
             return message
 
     def send_message(self, msg):
@@ -155,6 +170,8 @@ class Client:
 
             returns - returns True if the message sent without error and
                       False otherwise (usually bc of server disconnect)
+
+            raises - ServerDead instead of returning false
         """
         # Never send an empty message to the server!
         if msg.strip() == "":
@@ -170,7 +187,7 @@ class Client:
             self._sock.sendall(msg)
             return True
         except:
-            return False
+            raise ServerDead
 
     def close(self):
         """

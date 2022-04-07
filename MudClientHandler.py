@@ -4,9 +4,10 @@ import socketserver
 import threading
 
 
-# I fucked up and should be using an exception for when the client disconnects
-# instead I beefed it and have to check for None EVERY TIME, I might try to
-# fix it but idk how long that would take...
+class ClientDead(Exception):
+        """ Raised when the client is found dead """
+        pass
+
 
 class MudClientHandler(socketserver.StreamRequestHandler):
     HEADER_LENGTH = 16
@@ -27,37 +28,37 @@ class MudClientHandler(socketserver.StreamRequestHandler):
 
         character = None
 
-        self.send_msg("Would you like to create a new character?")
-        resp = self.yes_or_no()
-        if resp is None:
-            return
-        elif resp == "yes":
-            character = self.character_creation()
-        else:
-            character = self.login()
+        try:
 
-        if character is None:  # The client disconnected...
-            return
+            self.send_msg("Would you like to create a new character?")
+            resp = self.yes_or_no()
 
-        self.send_msg("Logged in as: " + character)
+            if resp == "yes":
+                character = self.character_creation()
+            else:
+                character = self.login()
+
+            self.send_msg("Logged in as: " + character)
+        except ClientDead:
+            print("ClientDead raised by connection at: ", self.client_address)
+            return
 
         # ======== MAIN GAME LOOP ==========
+        try:
+            sel = selectors.DefaultSelector()
+            sel.register(self.connection, selectors.EVENT_READ, None)
 
-        sel = selectors.DefaultSelector()
-        sel.register(self.connection, selectors.EVENT_READ, None)
+            while not isDead and not isQuit:
+                events = sel.select()
+                for key, mask in events:
+                    if mask == selectors.EVENT_READ:
+                        message = self.receive_message()
 
-        while not isDead and not isQuit:
-            events = sel.select()
-            for key, mask in events:
-                if mask == selectors.EVENT_READ:
-                    message = self.receive_message()
-
-                    if message is None:
-                        isDead = True
-                        return
-
-                    command, args = self.parse_command(message)
-                    self.execute_command(command, args)
+                        command, args = self.parse_command(message)
+                        self.execute_command(command, args)
+        except ClientDead:
+            print("ClientDead raised by connection at: ", self.client_address)
+            return
 
         print("Goodbye from: ", self.client_address)
 
@@ -85,8 +86,9 @@ class MudClientHandler(socketserver.StreamRequestHandler):
         """
             send_msg - sends a message to the client
 
-            returns - True if the message send was succesful, and False if the
-                      connection is closed
+            returns - True if the message send was succesful
+
+            raises - ClientDead if the connection is closed
         """
         try:
             header_length = self.HEADER_LENGTH
@@ -96,14 +98,15 @@ class MudClientHandler(socketserver.StreamRequestHandler):
             return True
         except:
             # Do clean up, handle should know to exit
-            return False
+            raise ClientDead
 
     def receive_message(self):
         """
             get_message - receives and returns a message from the client
 
-            returns - the decoded method received from the server, or None
-                       if the server is disconnected
+            returns - the decoded method received from the server
+
+            raises: ClientDead if the client is disconected
         """
 
         try:
@@ -112,19 +115,18 @@ class MudClientHandler(socketserver.StreamRequestHandler):
 
             # If the header is the empty string, the server is closed
             if header.strip() == b'':
-                return None
+                raise ClientDead
             else:
                 # Receive a message of the correct length
                 header = int(header.decode("utf-8").strip())
                 message = self.connection.recv(header).decode()
 
                 if message == "":
-                    return None
+                    raise ClientDead
                 return message
 
         except ConnectionResetError:
-            print("Error with ", self.client_address, " disconnected")
-            return None
+            raise ClientDead
 
     def get_response_from(self, options, prompt=None, case_sensitive=False, ):
         """
@@ -156,25 +158,27 @@ class MudClientHandler(socketserver.StreamRequestHandler):
 
         result = None
 
+        # Prompt the user for a response until they provide a valid answer
         while result is None:
+            # For each read event, check to see if the response is in the 
+            # list of allowed responses
             events = sel.select()
             for key, mask in events:
                 if mask == selectors.EVENT_READ:
+
                     msg = self.receive_message()
-
-                    # If message received is None, the client is disconnected
-                    if msg is None:
-                        return None
-
                     msg = msg.strip()
 
                     if not case_sensitive:
                         msg = msg.lower()
 
+                    # Check if the message corresponds to an allowable option
                     for key in options.keys():
                         if msg in options[key]:
                             result = key
 
+                    # If result was not set then the response was not allowed
+                    # and we prompt the user to try again.
                     if result is None:
                         self.send_msg(prompt)
 
@@ -202,9 +206,6 @@ class MudClientHandler(socketserver.StreamRequestHandler):
             for key, mask in events:
                 if mask == selectors.EVENT_READ:
                     msg = self.receive_message()
-
-                    if msg is None:
-                        return None
 
                     return msg.strip()
 
@@ -243,8 +244,8 @@ class MudClientHandler(socketserver.StreamRequestHandler):
         name = None
         while name is None:
             msg = self.get_one_response()
-            if msg == None:
-                return None
+            # if msg == None:
+            #     return None
 
             # TODO: validate name
             name = msg.strip().lower()
@@ -254,8 +255,8 @@ class MudClientHandler(socketserver.StreamRequestHandler):
         while password is None:
             self.send_msg("""Pick a password""")
             msg = self.get_one_response()
-            if msg is None:
-                return None
+            # if msg is None:
+            #     return None
 
             # TODO: Validate password
             password = msg
@@ -263,8 +264,8 @@ class MudClientHandler(socketserver.StreamRequestHandler):
             self.send_msg("Verify password")
 
             msg = self.get_one_response()
-            if msg is None:
-                return None
+            # if msg is None:
+            #     return None
 
             if password != msg:
                 self.send_msg("Passwords do not match")
