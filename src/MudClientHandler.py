@@ -2,6 +2,7 @@ import selectors
 import socket
 import socketserver
 import threading
+from character import Character
 
 
 class ClientDead(Exception):
@@ -12,8 +13,14 @@ class ClientDead(Exception):
 class MudClientHandler(socketserver.StreamRequestHandler):
     HEADER_LENGTH = 16
 
-    # def __init__(self, request, client_address, server):
-    #     super().__init__(request, client_address, server)
+    def __init__(self, request, client_address, server):
+        super().__init__(request, client_address, server)
+        self._character = None
+
+    # OK I HAVE NO IDEA WHAT THE DEAL IS, BUT IF SET UP IS OVERRIDDEN NOTHING WORKs....
+    # def setup(self):
+    #     # self.__character = None
+    #     pass
 
     def handle(self):
         """
@@ -26,22 +33,35 @@ class MudClientHandler(socketserver.StreamRequestHandler):
 
         # TODO: Add a welcome to the game ascii art message!!!
 
-        character = None
+        # The first message the server is expecting is the login/character
+        # creation string of the form:
+        #       login // name // password
+        #       create // name // password // room
+
+        self._character = None
 
         try:
+            resultdesc, character = "", None
+            while resultdesc != "ok":
+                self.send_msg("Enter login string (mode of loging // name // password [// roomname])")
 
-            self.send_msg("Would you like to create a new character?")
-            resp = self.yes_or_no()
+                startstr = self.get_one_response()
+                resultdesc, character = self.load_character(startstr)
+                if resultdesc != "ok":
+                    self.send_msg(f"Error loading character: {resultdesc}")
+            self.send_msg(f"Connected as {character.get_name()}")
 
-            if resp == "yes":
-                character = self.character_creation()
-            else:
-                character = self.login()
+            self._character = character
 
-            self.send_msg("Logged in as: " + character)
+            self._character.message = self.send_msg
+
         except ClientDead:
-            print("ClientDead raised by connection at: ", self.client_address)
+            print("Client is dead, that's what went wrong")
             return
+        except Exception as e:
+            print("Failure to load character: ", str(e))
+            return
+
 
         # ======== MAIN GAME LOOP ==========
         try:
@@ -68,7 +88,8 @@ class MudClientHandler(socketserver.StreamRequestHandler):
                      from the server
         """
         print("Client at ", self.client_address, " disconnected.")
-        self.server.character_disconnected("character")
+        if not self._character is None:
+            self.server.character_disconnected(self._character)
 
     # ============ HELPER METHODS ============
 
@@ -228,86 +249,63 @@ class MudClientHandler(socketserver.StreamRequestHandler):
             TODO - Make it do the thing!
         """
         print(command, args)
-        self.send_msg(f"command: {command} with args: {args}")
 
-    def character_creation(self):
+        found = False
+        cmd_set = self._character.get_commands()
+        for cmd in cmd_set.values():
+            if cmd.is_this_command(command):
+                found = True
+                cmd.execute(self._character, args, self.server)
+
+        if not found:
+            print("command not found, try movement")
+            # update found if movement is possible
+
+        if not found:
+            print("no exits, unknown command!")
+
+
+        # self.send_msg(f"command: {command} with args: {args}")
+
+    def load_character(self, startstr):
         """
-            character_creation - leads the user through character creation
+            Loads the user's desired character based on the login string
 
-            returns - The new character object, or None if the client
-                      disconnects
+            Returns a tuple of the form ("result description", character object)
+                On a success it will be of the form ("ok", character)
+                On a failure it will be of the form ("error message", None)
+            -------
+            startstr: string of the form
+                "login // name // password" or
+                "create // name // password // room"
         """
+        items = startstr.split("//")
 
-        # Pick a character name
-        # TODO: Decide on the guidelines for character names
-        self.send_msg("""Pick a character name""")
-        name = None
-        while name is None:
-            msg = self.get_one_response()
-            # if msg == None:
-            #     return None
+        if len(items) < 3:
+            return ("Not enough elements in string", None)
 
-            # TODO: validate name
-            name = msg.strip().lower()
+        # User wants to login as an existing character
+        if items[0].strip().lower() == "login":
+            char = self.server.login_character(items[1].strip().lower(), items[2].strip())
+            if char is None:
+                return ("Bad character info", None)
+            else:
+                return("ok", char)
 
-        # Pick + verify password
-        password = None
-        while password is None:
-            self.send_msg("""Pick a password""")
-            msg = self.get_one_response()
-            # if msg is None:
-            #     return None
+        # User wants to create a character
+        elif items[0].strip().lower() == "create":
+            if len(items) != 4:
+                return ("Wrong number of elements in string", None)
 
-            # TODO: Validate password
-            password = msg
+            password = items[2].strip()
+            if password != password:  # TODO: validate password correctly!
+                return("Invalid password", None)
 
-            self.send_msg("Verify password")
+            char = self.server.create_new_character(items[1].strip().lower(), password,
+                                                    "a glowing description", items[3].strip().lower())
+            return ("ok", char)
 
-            msg = self.get_one_response()
-            # if msg is None:
-            #     return None
+        else:
+            return ("Bad first element", None)
 
-            if password != msg:
-                self.send_msg("Passwords do not match")
-                password = None
-
-        # Other character creation things like skills, and appearance
-
-        # Pick a starting room
-        starting_options = {"atrium": {"1", "atrium"},
-                            "powder room": {"2", "powder room", "powder"}}
-        self.send_msg("""Pick a starting room from the following list:
-            1 - Atrium
-            2 - Powder Room""")
-        room_choice = self.get_response_from(starting_options, "Pick atrium(1) or powder room(2)")
-
-        # TODO: Create a new character object with the collected info
-
-        self.server.create_new_character("Character")
-
-        return "character"
-
-    def login(self):
-        """
-            login - get the user's character name and password and log them
-                    into the game
-
-            return - The user's character object
-
-            TODO: Add a way switch to character creation? (or not)
-        """
-        character = None
-
-        while character is None:
-            self.send_msg("Enter character name")
-            char_name = self.get_one_response()
-
-            self.send_msg("Enter password")
-            password = self.get_one_response()
-
-            character = self.server.login_character(char_name, password)
-
-            if character is None:
-                self.send_msg("Login attempt failed. Character name or password are incorrect.")
-
-        return character
+        return ("not yet implemented", None)

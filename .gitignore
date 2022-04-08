@@ -1,0 +1,15 @@
+
+.idea/mud.iml
+.idea/vcs.xml
+src/.DS_Store
+.idea/inspectionProfiles/profiles_settings.xml
+.idea/misc.xml
+.idea/modules.xml
+.DS_Store
+src/__pycache__/basic_commands.cpython-39.pyc
+src/__pycache__/character.cpython-39.pyc
+src/__pycache__/combat.cpython-39.pyc
+src/__pycache__/command.cpython-39.pyc
+src/__pycache__/map.cpython-39.pyc
+src/__pycache__/MudClientHandler.cpython-39.pyc
+src/__pycache__/room.cpython-39.pyc
