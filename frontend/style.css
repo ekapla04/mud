@@ -168,7 +168,7 @@ body {
   font-family: sans-serif !important;
 }
 .bg-funky	{
-  background: #FF1744;
+  background: linear-gradient(180deg, #111601 0%, rgba(255, 255, 255, 0) 100%), #111601;
 }	
 
 .heading {
@@ -254,7 +254,7 @@ img {max-width: 100%;}
 		  background: #3F51B5 none repeat scroll 0 0;
 		  border-radius: 3px;
 		  font-size: 14px;
-		  margin: 0; color:#fff;
+		  margin: 0; color:rgb(14, 13, 13);
 		  padding: 5px 10px 5px 12px;
 		  width:100%;
 		}
@@ -278,7 +278,7 @@ img {max-width: 100%;}
 		  background: #05728f none repeat scroll 0 0;
 		  border: medium none;
 		  border-radius: 50%;
-		  color: #fff;
+		  color: rgb(15, 201, 92);
 		  cursor: pointer;
 		  font-size: 17px;
 		  height: 33px;
@@ -287,20 +287,24 @@ img {max-width: 100%;}
 		  top: 11px;
 		  width: 33px;
 		}
-		.messaging { background: #fff;}
+		.messaging { background: rgb(10, 10, 10);}
 		.msg_history {
 		  max-height: 516px;
 		  overflow-y: auto;
 		}
+.inputcmd {
+      position: relative;
+      /* bottom: 0px; */
+      height: 50px;
+      overflow: auto;
+      left: 0px;
+      margin: 20px}
 
-.credit {
-  margin-bottom: 20px;
-  margin-top: 20px;
+.bg-funky{
+  background-image: url('./images/back1.jpg');
+  background-repeat: no-repeat;
+  /* background-attachment: fixed; */
+  background-size: cover
 }
 
-.credit a {
-  color: #fff;
-  font-weight: 300;
-  letter-spacing: 2px;
-  border-bottom: dotted 1px;
-}
+
