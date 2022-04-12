@@ -4,8 +4,6 @@
 from threading import Lock
 from combat import Combat
 
-
-
 class Room:
     def __init__(self, id, name, description):
         self.__id = id
@@ -17,6 +15,7 @@ class Room:
         self.__combats = []
         self.__charLock = Lock()
         self.__combatsLock = Lock()
+        self.__itemLock = Lock()
 
     def addCharacter(self, character):
         '''
@@ -81,14 +80,30 @@ class Room:
 
     def broadcast(self, sender, message):
         '''
-            Method to broadcast message to all users in the room
+            Method to broadcast message to all users in the room except the sender
 
             Parameters:
             ------------
             sender: character object
             message: string (message to broadcast)
         '''
-        pass
+        with self.__charLock:
+            for char in self.__characters.keys():
+                if char.get_name() != sender.get_name():
+                    char.message(message)
+
+    def broadcast_all(self, sender, message):
+        '''
+                    Method to broadcast message to all users in the room
+
+                    Parameters:
+                    ------------
+                    sender: character object
+                    message: string (message to broadcast)
+                '''
+        with self.__charLock:
+            for char in self.__characters.keys():
+                char.message(message)
     
     def addNeighbor(self, neighbor, exitname):
         '''
@@ -126,9 +141,18 @@ class Room:
             status: string (message whether system succeeded or failed)
         '''
         try:
+            self.__itemLock.acquire()
             self.__items.append(item)
             status = "success"
         except:
             status = "Error: cannot add item to room " + self.__displayName
+        finally:
+            self.__itemLock.release()
 
         return status
+
+    def getDisplayName(self):
+        return self.__displayName
+
+    def getDescription(self):
+        return self.__description
