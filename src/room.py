@@ -2,9 +2,12 @@
     Class representing room object
 '''
 from threading import Lock
-from combat import Combat
+from src.combat import Combat
 
-class Room:
+from src.character import Character
+
+class Room():
+
     def __init__(self, id, name, description):
         self.__id = id
         self.__displayName = name
@@ -151,8 +154,17 @@ class Room:
 
         return status
 
+    def getUniqueID(self):
+        return self.__id
+
     def getDisplayName(self):
         return self.__displayName
 
     def getDescription(self):
         return self.__description
+
+    def getExits(self):
+        return self.__exits
+    
+    def getCharacters(self):
+        return self.__characters

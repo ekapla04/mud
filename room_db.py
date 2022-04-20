@@ -1,18 +1,22 @@
 import sqlite3
 import csv
+from src.room import Room
+from src.character import Character
 
-import sqlite3
-
-from tables import Description
+from user_db import UserDatabase
+# from src.command import Command
 
 class RoomDatabase(object):
 
     def __init__(self):
         '''initialize db class variables'''
+        # self.engine = sqlalchemy.create_engine('sqlite:///rooms.db')
+        # self.bind = sqlalchemy.orm.sessionmaker(bind = self.engine)
+        # self.session = 
         self.connection = sqlite3.connect("rooms.db")
         self.cur = self.connection.cursor()
         self.create_table()
-        # print("table created")
+        print("table created")
 
 
     def close(self):
@@ -58,7 +62,6 @@ class RoomDatabase(object):
                                    %(uui,name))
         result = self.cur.fetchall()
         if(len(result) > 0):
-            print("len > 0")
             return True, result
         else:
             print("room " + str(uui) + ", " + str(name) + " not in table")
@@ -94,30 +97,95 @@ class RoomDatabase(object):
             print("cannot retrieve data because room does not exist")
 
     def import_data(self, filename):
-        self.cur.execute(LOAD DATA INFILE 'c:/tmp/discounts.csv' 
-                        INTO TABLE discounts 
-                        FIELDS TERMINATED BY ',' 
-                        ENCLOSED BY '"'
-                        LINES TERMINATED BY '\n'
-                        IGNORE 1 ROWS;
-        # with open(filename,'r') as fin: # `with` statement available in 2.5+
-        # # csv.DictReader uses first line in file for column headings by default
-        #     dr = csv.DictReader(fin) # comma is default delimiter
-        #     for i in dr:
-        #         uui = i['uui']
-        #         name = i['name']
-        #         description = i['description']
-        #         exits = i['exits']
-        #         characters = i['characters']
-        #     # to_db = [(i['uui'], i['name'], i['description'], \
-        #     #           i['exits'], i['characters'],) for i in dr]
-        # self.add_room((uui, name, description, exits, characters))
+        # self.cur.execute(LOAD DATA LOCAL INFILE 'filename' 
+        #                 INTO TABLE rooms
+        #                 FIELDS TERMINATED BY ',' 
+        #                 ENCLOSED BY '"'
+        #                 LINES TERMINATED BY '\n'
+        #                 IGNORE 1 ROWS)
+        with open(filename,'r') as fin: # `with` statement available in 2.5+
+        # csv.DictReader uses first line in file for column headings by default
+            dr = csv.DictReader(fin) # comma is default delimiter
+            for i in dr:
+                uui = i['uui']
+                name = i['name']
+                description = i['description']
+                exits = i['exits']
+                characters = i['characters']
+            # to_db = [(i['uui'], i['name'], i['description'], \
+            #           i['exits'], i['characters'],) for i in dr]
+        self.add_room((uui, name, description, exits, characters))
     
 
     def commit(self):
         '''commit changes to database'''
         self.connection.commit()
 
+
+    def load_room(self, room):
+        '''load room object into database'''
+        uui = room.getUniqueID() 
+
+        name = room.getDisplayName()
+
+        description = room.getDescription()
+
+        exits = []
+        exit_dict = room.getExits()
+        for val in exit_dict.values():
+            exit_name = val.getDisplayName()
+            unique_id = val.getUniqueID()
+            exits.append("[" + str(unique_id) + " " + exit_name + "]")
+
+        characters = []
+        char_dict = room.getCharacters()
+        for key in char_dict.keys():
+            char_name = key.get_name()
+            password = key.get_pswd()
+            characters.append("[" + char_name + " " + password + "]")
+
+        self.executemany((uui, name, description, str(exits), str(characters)))
+    
+    def retrieve_room(self, data):
+        boolean, row = self.in_table(data)
+        if boolean == True:
+            uui = row[0][0]
+            # print(uui)
+            name = row[0][1]
+            description = row[0][2]
+            exits = row[0][3]
+            characters = row[0][4]
+            print(characters)
+            print(exits)
+
+            room = Room(uui, name, description)
+            
+            # print(room)
+            # self.retrieve_character(characters, room)
+
+            return room
+
+    def retrieve_character(self, characters, room):
+        hello
+
+
+
+def main():
+    characters = UserDatabase()
+    rooms = RoomDatabase()
+    room = Room(21, "desert", "windy and dry")
+    roomA = Room(34, "rainforest", "warm and humid")
+    room.addNeighbor(roomA, "North")
+    characterA = Character("ek", "ls", "tall and blonde", 21)
+    characterB = Character("sk", "rw", "brunette with brown eyes", 21)
+    room.addCharacter(characterA)
+    room.addCharacter(characterB)
+    rooms.load_room(room)
+    rooms.commit()
+    roomB = rooms.retrieve_room((21, "desert"))
+    roomC = rooms.retrieve_room((38, "hello"))
+
+main()
 
 
 # def importData(conn, cursor):

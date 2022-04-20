@@ -2,9 +2,14 @@
     Class representing character object
 '''
 from threading import Lock
-from command import Command
+from src.command import Command
 
-class Character:
+
+
+
+
+class Character():
+
     def __init__(self, name, pswd, descr, room):
         self.__name = name
         self.__description = descr
@@ -71,6 +76,9 @@ class Character:
     def get_desc(self):
         return self.__description
 
+    def get_pswd(self):
+        return self.__pswd
+
 
     # None of these are protected with a mutex under the assumption that
     # After the character is initialized, we don't change them
@@ -95,3 +103,4 @@ class Character:
             Message all users in the current room except yourself
         """
         self.__location.broadcast(self, msg)
+

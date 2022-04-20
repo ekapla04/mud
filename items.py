@@ -4,9 +4,9 @@ class UserDatabase(object):
 
     def __init__(self):
         '''initialize db class variables'''
-        self.connection = sqlite3.connect("users.db")
+        self.connection = sqlite3.connect("items.db")
         self.cur = self.connection.cursor()
-        self.create_table()
+        self.create_table
 
 
     def close(self):
@@ -81,82 +81,3 @@ class UserDatabase(object):
     def commit(self):
         '''commit changes to database'''
         self.connection.commit()
-
-    #########   Log in code to potentially be reworked later #########
-
-# def connect():
-#     # connect to database
-#     conn = sqlite3.connect("users.db")
-
-#     # create cursor object to send SQL statements to db
-#     cursor = conn.cursor()
-
-#     cursor.execute("CREATE TABLE IF NOT EXISTS users \
-#                     (username TEXT PRIMARY KEY, \
-#                     password TEXT, \
-#                     location TEXT, \
-#                     inventory TEXT, \
-#                     hp INT)")
-
-#     # prompt(conn, cursor)
-#     conn.commit()
-#     conn.close()
-
-# def add_character(Character person):
-#     print("in add char")
-#     print(person.name)
-    
-
-
-# def login(conn, cursor):
-#     # get username and password from client
-#     cursor, username, password = exists(cursor)
-
-#     ta_key = True
-#     # if this call to db returns something
-#     if cursor.fetchall():
-#         print("Log in successful")
-#     else:
-#         print("Log in failed.")
-#         while ta_key == True:
-#             attempt = input("Type T to try again, Q to quit: ")
-#             if attempt == "T" or attempt == "t":
-#                 login(conn, cursor)
-#             elif attempt == "Q" or attempt == "q":
-#                 ta_key = False
-#                 exit(0)
-#             else:
-#                 print("Unknown response. Try again.")
-
-
-# # opening prompt           
-# def prompt(conn, cursor):
-#     user_status = input("Are you a returning user? Type Y or N: ")
-#     if user_status == "Y" or user_status == "y":
-#         login(conn, cursor)
-#     elif user_status == "N" or user_status == "n":
-#         create_new_user(conn, cursor)
-#     else:
-#         print("Unknown response. Try again.")
-#         prompt(conn, cursor)
-        
-
-# def create_new_user(conn, cursor):
-#     cursor, uname, pswd = exists(cursor)
-#     print("username: " + str(uname))
-#     try:
-#         cursor.execute("INSERT INTO users VALUES (?, ?)", (uname, pswd))
-#     except:
-#         print("Username already taken. Try again.")
-#         create_new_user(conn, cursor)
-
-
-# def exists(cursor):
-#     username = input("Enter Username: ")
-#     password = input("Enter Password: ")
-
-#     cursor.execute('SELECT * from users WHERE username="%s" AND password="%s"'\
-#                    %(username,password))
-#     return cursor, username, password
-
-# connect()
