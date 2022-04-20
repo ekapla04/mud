@@ -38,5 +38,6 @@ def main():
 
     # retrieve room objects from database
     roomC = rooms.retrieve_room((21))
+    print(roomC.getDisplayName())
 
 main()

@@ -1,5 +1,6 @@
 import sqlite3
 import csv
+import this
 from src.room import Room
 from src.character import Character
 import re
@@ -204,10 +205,10 @@ class Database(object):
             
             
             # exits = self.retrieve_room((row[0][3]).strip("[]").strip("''"))
-            # print(exits)
+            print(row[0][3])
             # this is where cycle continues... for exit in exits, retrieve room
-                # MUST be a character in a room for it to exist
-                # infinite loop bc one exit --> other exit --> back to og exit
+            #     MUST be a character in a room for it to exist
+            #     infinite loop bc one exit --> other exit --> back to og exit
 
 
             characters = self.retrieve_character(row[0][4], room)
@@ -252,4 +253,3 @@ class Database(object):
         hp = data[0][5]
         
         return (name, password, description, location, items, hp)
-
