@@ -112,6 +112,42 @@
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
 <script  src="signupLogin.js"></script>
+<script type="text/javascript" charset="utf-8">
+  $(document).ready(function() {
+      const websocket = new WebSocket("ws://localhost:8001/");
+
+      var outlog = $("#output")
+      var in_line = $("[name=messagebox]")
+
+      function send_message() {
+          var msg = in_line.val()
+          in_line.val("")
+
+          if (msg == "") {return;}
+
+          outlog.append(`<p class='from_me'>${msg}</p>`)
+
+          websocket.send(msg)
+          console.log("sendifyed")
+      }
+
+      function receive_message(msg){
+          var data = JSON.parse(msg["data"]);
+          outlog.append(`<p class='from_server'>${data["text"]}</p>`)
+      }
+
+      $("[name=submit]").click(send_message);
+
+      $("[name=messagebox]").keypress(function(event){
+          var keycode = (event.keyCode ? event.keyCode : event.which);
+          if(keycode == '13'){ send_message(); }
+      });
+
+      websocket.onmessage = receive_message;
+
+  });
+
+</script>
 
 </body>
 </html>

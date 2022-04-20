@@ -95,4 +95,5 @@ $('.form').find('input, textarea').on('keyup blur focus', function (e) {
     // initChat(websocket);
     // receiveWebsocketMessage(websocket);
     // loginUser();
+    
   });
