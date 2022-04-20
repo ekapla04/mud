@@ -1,6 +1,6 @@
 import sys
 sys.path.append("pypackages")
-sys.path.append("/Users/madeleinestreet/Documents/GitHub/mud/src")
+sys.path.append("../src")
 
 import websockets
 import asyncio
@@ -109,7 +109,7 @@ def execute_command(character, command, args):
 
 # ==================== CONNECTION HANDLER ====================
 
-async def MudConnection(websocket):
+async def MudConnection(websocket,dummy):
     global GAMESTATE
     char_name = ""
 
