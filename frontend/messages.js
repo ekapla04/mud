@@ -4,6 +4,8 @@ me.avatar = "";
 var you = {};
 you.avatar = "";
 
+var websocket = "";
+
 function formatAMPM(date) {
     var hours = date.getHours();
     var minutes = date.getMinutes();
@@ -56,14 +58,16 @@ function resetChat(){
 }
 
 $(".mytext").on("keydown", function(e){
-    if (e.which == 13){
-        var text = $(this).val();
-        if (text !== ""){
-            insertChat("me", text);              
-            $(this).val('');
+        if (e.which == 13){
+            var text = $(this).val();
+            console.log("And we should send it: ", text);
+            if (text !== ""){
+                insertChat("me", text);
+                $(this).val('');
+                websocket.send(text);
+            }
         }
-    }
-});
+    });
 
 $('body > div > div > div:nth-child(2) > span').click(function(){
     $(".mytext").trigger({type: 'keydown', which: 13, keyCode: 13});
@@ -73,12 +77,30 @@ $('body > div > div > div:nth-child(2) > span').click(function(){
 // resetChat();
 
 window.addEventListener("DOMContentLoaded", () => {
-    insertChat("me", "Hello Tom...", 0);  
-    insertChat("you", "Hi, Pablo", 1500);
-    insertChat("me", "What would you like to talk about today?", 3500);
-    insertChat("you", "Tell me a joke",7000);
-    insertChat("me", "Spaceman: Computer! Computer! Do we bring battery?!", 9500);
-    insertChat("you", "LOL", 12000);
+    // insertChat("me", "Hello Tom...", 0);  
+    // insertChat("you", "Hi, Pablo", 1500);
+    // insertChat("me", "What would you like to talk about today?", 3500);
+    // insertChat("you", "Tell me a joke",7000);
+    // insertChat("me", "Spaceman: Computer! Computer! Do we bring battery?!", 9500);
+    // insertChat("you", "LOL", 12000);
+
+
+    websocket = new WebSocket("ws://localhost:8001/");
+
+
+    function receive_message(msg){
+        console.log("Message received: ", msg)
+        var data = JSON.parse(msg["data"]);
+        // outlog.append(`<p class='from_server'>${data["text"]}</p>`)
+        insertChat("you", data["text"], 3);
+    }
+
+
+
+
+
+    websocket.onmessage = receive_message;
+
   });
 
 
