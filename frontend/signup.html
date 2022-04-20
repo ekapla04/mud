@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> SignUp Page </title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background: linear-gradient(180deg, #E8F6FF 0%, rgba(255, 255, 255, 0) 100%), #BEE3F8;
+            text-align: center;
+            padding-top: 30px;
+            color: rgb(82, 80, 80);
+            font-size: 18px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            animation: fadein 2s ease-in;
+            animation-fill-mode: forwards;
+        }
+
+        h1 {
+            color: rgb(70, 70, 70);
+        }
+
+        input[type=text],
+        input[type=password],
+        select,
+        textarea {
+            width: 180px;
+            /* Full width */
+            padding: 7px;
+            /* Some padding */
+            border: none;
+            border-radius: 4px;
+            /* Rounded borders */
+            box-sizing: border-box;
+            /* Make sure that padding and width stays in place */
+            margin-top: 5px;
+            /* Add a top margin */
+            margin-bottom: 3px;
+            /* Bottom margin */
+            resize: none;
+            background: #f8f6e8;
+            box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.25);
+            font-size: 14px;
+            color: rgb(110, 110, 110);
+        }
+
+        .one {
+            padding-bottom: 20px;
+        }
+
+        input[type=submit] {
+            background-color: #306AFF;
+            color: #FFEFF4;
+            font-size: 15px;
+            padding: 10px 20px;
+            width: 120px;
+            border: none;
+            border-radius: 4px;
+            box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        input[type=submit]:hover {
+            background-color: #0733a1;
+        }
+
+        .log {
+            background-color: #0733a1;
+            color: #FFEFF4;
+            margin-top: 20px;
+            font-size: 15px;
+            padding: 10px 10px;
+            width: 120px;
+            border: none;
+            border-radius: 4px;
+            box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+        }
+
+        .log:hover {
+            background-color: #09215e
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <script>
+
+    </script>
+    <script>
+
+    </script>
+    <!-- <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.1.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.1.0/firebase-database.js"></script>
+    <script>
+        var firebaseConfig = {
+            apiKey: "AIzaSyBSwmsE-sYNZlxivIV_HvQmN_0MwWD5yAI",
+            authDomain: "comp20final.firebaseapp.com",
+            databaseURL: "https://comp20final.firebaseio.com",
+            projectId: "comp20final",
+            storageBucket: "comp20final.appspot.com",
+            messagingSenderId: "681395945483",
+            appId: "1:681395945483:web:3c47a6c8add4ce906d870e",
+            measurementId: "G-BEM6C1874E"
+        };
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig); -->
+
+    </script>
+
+    <!-- <script type="module" src="firebase.js"></script> -->
+    <script src="signin.js"></script>
+    <!-- <script src="authenticate.js"></script> -->
+
+    <!-- <img src="TrackChat-circle.png" style="width:150px"> -->
+    <form name="myForm" onsubmit="return validateForm()" method="post">
+        <div class="one">
+            <label for="first-name"></label> Enter first name<br>
+            <input type="text" id="fname" name="fname" placeholder="first name"> <br>
+        </div>
+        <div class="one">
+            <label for="last-name"></label> Enter last name<br>
+            <input type="text" id="lname" name="lname" placeholder="last name"> <br>
+        </div>
+        <div class="one">
+            <label for="username"></label> Create a username <br>
+            <input type="text" id="username" name="username" placeholder="username"> <br>
+        </div>
+        <div class="one">
+            <label for="email"></label> Enter your email <br>
+            <input type="text" id="email" name="email" placeholder="email"> <br>
+        </div>
+        <div class="one">
+            <label for="password1"></label>Create a password <br>
+            <input type="password" id="password1" name="password1" placeholder="password"> <br>
+        </div>
+        <div class="one">
+            <label for="password2"></label> Re-enter your password<br>
+            <input type="password" id="password2" name="password2" placeholder="password"> <br>
+        </div>
+        <div class="buttons">
+            <input type="submit" value="Sign Up">
+            <button class="log" id="login">Go to Log In</button>
+        </div>
+    </form>
+    <script>
+        var logged = true;
+        document.getElementById("login").onclick = function () {
+            logged = true;
+            location.href = "login.html";
+        }
+        function validateForm() {
+            if (logged == true) {
+                return false;
+            }
+            var firstName = document.forms["myForm"]["fname"].value;
+            if (firstName == "") {
+                alert("please enter your first name");
+                return false;
+            }
+            var lastName = document.forms["myForm"]["lname"].value;
+            if (lastName == "") {
+                alert("please enter your last name");
+                return false;
+
+            }
+            var username = document.forms["myForm"]["username"].value;
+            if (username == "") {
+                alert("please enter your username");
+                return false;
+            }
+            var email = document.forms["myForm"]["email"].value;
+            if (email == "") {
+                alert("please enter your email");
+                return false;
+            }
+            var pass1 = document.forms["myForm"]["password1"].value;
+            if (pass1 == "") {
+                alert("please create a password");
+                return false;
+            }
+            var pass2 = document.forms["myForm"]["password2"].value;
+            if (pass2 == "") {
+                alert("please re-enter your password");
+                return false;
+            }
+            if (pass1 != pass2) {
+                alert("passwords do not match");
+                return false;
+            }
+            console.log(email)
+            console.log(pass1)
+            console.log(username)
+            createUser(email, pass1, username).then(() => {
+                console.log('User account created & signed in!');
+
+
+            var proxyUrl = 'https://cors-anywhere.herokuapp.com/',
+                targetUrl = 'https://peaceful-temple-62726.herokuapp.com/login'
+
+            //     method: "GET",
+            //     headers: {
+            //         "Content-Type": "text/plain",
+            //     },
+            // mode: 'cors', // no-cors, *cors, same-origin
+            // // cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+            // credentials: 'same-origin', // include, *same-origin, omit
+            fetch(proxyUrl + targetUrl)
+                    .then(function (response) {
+                        console.log(response);
+                        return response;
+                    })
+                    .catch(function (error) {
+                        console.log("Error: " + error);
+                    })                    
+
+
+                // fetch("https://peaceful-temple-62726.herokuapp.com/login")
+                //     .then(function (response) {
+                //         console.log(response.json());
+                //         return response.json();
+                //     })
+                //     .catch(function (error) {
+                //         console.log("Error: " + error);
+                //     })                    
+
+                pushUserToDatabase(firstName, lastName, username).then(() => {
+                    window.location.href = "./home.html";
+                });
+
+                localStorage.setItem("email", email);
+                localStorage.setItem("password", pass1);
+            })
+                .catch(error => {
+                    if (error.code === 'auth/email-already-in-use') { alert('That email address is already in use!'); }
+                    if (error.code === 'auth/invalid-email') { alert('That email address is invalid!'); }
+                })
+            return false
+
+            // setTimeout(() => {  console.log("World!"); }, 2000);
+        }
+    </script>
+
+
+</body>
+
+</html>

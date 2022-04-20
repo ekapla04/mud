@@ -1,12 +1,8 @@
 .mytext{
   border:0;padding:10px;background:whitesmoke;
-  font-size: x-large;
-  width: 100%;
-  max-height: 40%;
 }
 .text{
   width:75%;display:flex;flex-direction:column;
-  left: 10rem;
 }
 .text > p:first-of-type{
   width:100%;margin-top:0;margin-bottom:auto;line-height: 13px;font-size: 12px;
@@ -19,7 +15,6 @@
 }        
 .text-r{
   float:right;padding-left:10px;
-  width: 100%;
 }
 .avatar{
   display:flex;
@@ -36,58 +31,33 @@
   float:right;background:whitesmoke;
 }
 .msj{
-  float:left;background:whitesmoke;
+  float:left;background:white;
 }
 .frame{
-  /* background:#c4c407; */
-  height:auto;
-  display: flex;
-  padding:40px;;
+  background:#e0e0de;
+  height:450px;
+  overflow:hidden;
+  padding:0;
 }
 .frame > div:last-of-type{
   position:absolute;bottom:0;width:100%;display:flex;
 }
-
-body {
-  background-image: url('./images/back1.jpg');
-  background-repeat: no-repeat;
-  background-size: cover;
-  max-width: 100%;
-  height:max-content;
-  /* overflow-x: hidden; */
-}
-
 body > div > div > div:nth-child(2) > span{
   background: whitesmoke;padding: 10px;font-size: 21px;border-radius: 50%;
 }
 body > div > div > div.msj-rta.macro{
-  margin:auto;
-  margin-left:1%;
+  margin:auto;margin-left:1%;
 }
 ul {
   width:100%;
   list-style-type: none;
   padding:18px;
-  /* position:absolute; */
+  position:absolute;
   bottom:47px;
-  /* display:flex; */
+  display:flex;
   flex-direction: column;
-  height: auto;
-  overflow:scroll;
-  overflow-x: hidden;
-  max-height: 600px;
-}
-
-/* li {
-  border-top: 1px solid #ccc;
-} */
-
-ul ul {
-  text-indent: 1em;
-}
-
-ul ul ul {
-  text-indent: 2em;
+  top:0;
+  overflow-y:scroll;
 }
 .msj:before{
   width: 0;
@@ -106,7 +76,6 @@ ul ul ul {
   content:"";
   top:-5px;
   left:14px;
-  right: 10px;
   position:relative;
   border-style: solid;
   border-width: 13px 13px 0 0;
@@ -127,63 +96,3 @@ input:focus{
 :-moz-placeholder { /* Firefox 18- */
   color: #d4d4d4;
 }  
-
-/* .container{
-  background-image: url('./images/back1.jpg');
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-size: cover
-} */
-
-.messaging { background: rgb(73, 72, 72);}
-
-/* .textbox {
-  padding-bottom: 5px;
-  background-color: #e49c0d;
-  left: 0px;
-  right: 1px;
-  /* bottom: 5px; */
-  /* position: absolute; */
-  /* bottom: 0px; */
-  /* display: flex; */
-/* }  */
-
-.heading {
-  color: #ffac07;
-  margin: 20px;
-  font-weight: 1000;
-  font-size: 5em;
-  font-family:Lucida Handwriting;
-  text-align: center;
-}
-
-
-.grid-container {
-  display: grid;
-  grid-template-columns: 1fr 3fr;
-  grid-gap: 20px;
-  /* max-height: 70%; */
-  /* position: static; */
-}
-
-.textcontainer{
-  width: 90%;
-}
-
-.mapper {
-  background-color: #917c53;
-  height: 20rem;
-  overflow: hidden;
-  background-image: url('./images/back2.jpg');
-  background-repeat: no-repeat;
-  background-size: cover;
-}
-
-.scndCol {
-  text-align: center;
-  color: #ffac07;
-}
-
-.gchild2 {
-  max-height: 30%;
-}

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title> LogIn Page </title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            background: linear-gradient(180deg, #E8F6FF 0%, rgba(255, 255, 255, 0) 100%), #BEE3F8;
+            text-align: center;
+            opacity: 0;
+            padding-top: 30px;
+            color: rgb(82, 80, 80);
+            font-size: 18px;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            margin-top: 10%;
+            animation: fadein 2s ease-in;
+            animation-fill-mode: forwards;
+        }
+
+        h1 {
+            color: rgb(70, 70, 70);
+        }
+
+        img {
+            padding-bottom: 20px;
+        }
+
+        input[type=text],
+        input[type=password],
+        select,
+        textarea {
+            width: 180px;
+            /* Full width */
+            padding: 7px;
+            /* Some padding */
+            border: none;
+            border-radius: 4px;
+            /* Rounded borders */
+            box-sizing: border-box;
+            /* Make sure that padding and width stays in place */
+            margin-top: 10px;
+            /* Add a top margin */
+            margin-bottom: 3px;
+            /* Bottom margin */
+            resize: none;
+            background: #f8f6e8;
+            box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.25);
+            font-size: 14px;
+            color: rgb(110, 110, 110);
+        }
+
+        .one {
+            padding-bottom: 30px;
+        }
+
+        .log {
+            background-color: #306AFF;
+            color: #FFEFF4;
+            font-size: 15px;
+            padding: 10px 40px;
+            width: 150px;
+            border: none;
+            border-radius: 4px;
+            box-shadow: -4px 4px 4px rgba(0, 0, 0, 0.25);
+            cursor: pointer;
+        }
+
+        .log:hover {
+            background-color: #0733a1
+        }
+
+        @keyframes fadein {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <script type="module" src="firebase.js"></script> -->
+    <script src="signin.js"></script>
+
+    <img src="TrackChat-circle.png" style="width:150px">
+    <form name="myForm" onsubmit="return validateForm()" method="post" action="home.html">
+        <div class="one">
+            <label for="email"></label> Enter your email <br>
+            <input type="text" id="email" name="email" placeholder="email"> <br>
+        </div>
+        <div class="one">
+            <label for="password1"></label>Enter your password <br>
+            <input type="password" id="password1" name="password1" placeholder="password"> <br>
+        </div>
+        <div class="buttons">
+            <input type="submit" class="log" value="Log In"> <br>
+        </div>
+    </form>
+    <script>
+        function validateForm() {
+            var validate = true;
+            var email = document.forms["myForm"]["email"].value;
+            if (email == "") {
+                alert("please enter your email");
+                return false;
+            }
+            var pass1 = document.forms["myForm"]["password1"].value;
+            if (pass1 == "") {
+                alert("please create a password");
+                return false;
+            }
+
+            signInUser(email, pass1).then(() => {
+                localStorage.setItem("email", email);
+                localStorage.setItem("password", pass1);
+                window.location.href = "./home.html";
+            }).catch((error) => {
+                var errorCode = error.code;
+                
+                if (errorCode === 'auth/wrong-password') {
+                    alert('Wrong Password!');
+                    return false;
+                }
+                else if (errorCode === 'auth/user-not-found') {
+                    alert('User not found!');
+                    return false;
+                } else {
+                    alert('Invalid Email or Password')
+                }
+            });
+
+            return false;
+        }
+    </script>
+</body>
+
+</html>
