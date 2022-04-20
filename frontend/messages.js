@@ -77,7 +77,8 @@ $('body > div > div > div:nth-child(2) > span').click(function(){
 // resetChat();
 
 window.addEventListener("DOMContentLoaded", () => {
-    // insertChat("me", "Hello Tom...", 0);  
+    insertChat("you", "Hello, to connect to server type: login//YOURUSERNAME//PASSWORD", 0);
+    insertChat("you", "Basic commands: <br> say, \n look, \n map, \n move"); 
     // insertChat("you", "Hi, Pablo", 1500);
     // insertChat("me", "What would you like to talk about today?", 3500);
     // insertChat("you", "Tell me a joke",7000);
@@ -90,7 +91,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
     function receive_message(msg){
         console.log("Message received: ", msg)
+        // identify whether it's msg, map, or error
+        // 
         var data = JSON.parse(msg["data"]);
+        console.log(data)
         // outlog.append(`<p class='from_server'>${data["text"]}</p>`)
         insertChat("you", data["text"], 3);
     }
