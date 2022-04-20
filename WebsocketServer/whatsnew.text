@@ -1,0 +1,17 @@
+I did it! I figured out websockets and asyncio! woo!
+
+Anyways, here's how it works:
+
+    - app.py: The server it's self. 
+        - MudClientHandler is replaced with the MudConnectionFunction.
+        - Game state data is now stored in a GameState instance
+    - gamestate.py: Game state object to hold the characters, map and db.
+    - client.html: The client. Connects to the server.
+    - character.py: The same as the previous character.py but the message function
+        is defined differently. I just copied it so that I didn't fuck up git.
+    - pypackages folder - Local installation of the websockets package since
+        it isn't available on the department servers.
+
+RUN SERVER: python3 app.py
+
+CONNECT TO SERVER: open client.html in a browser (firefox defs works)
