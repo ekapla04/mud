@@ -34,7 +34,7 @@ async def login(websocket):
     try:
         async for message in websocket:
             message = message.split("//")
-
+            print(message)
 
             if len(message) < 3:
                 reprompt()
