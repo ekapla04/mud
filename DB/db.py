@@ -1,8 +1,10 @@
+import sys
+sys.path.insert(0, '/h/ekapla04/comp21/mud/src')
+
 import sqlite3
-import csv
-import this
-from src.room import Room
-from src.character import Character
+from room import Room
+from character import Character
+from items import Items
 import re
 
 
@@ -17,8 +19,10 @@ class Database(object):
 
         if (db_name == "users.db"):
             self.create_userDB()
-        elif (db_name == "rooms.db"):
+        if (db_name == "rooms.db"):
             self.create_roomDB()
+        elif (db_name == "items.db"):
+            self.create_itemsDB()
 
     
     def create_roomDB(self):
@@ -39,20 +43,14 @@ class Database(object):
                                             location TEXT, \
                                             inventory TEXT, \
                                             hp INT)")
-    
 
-    # i dont think this will work how we want it to... no way to store
-    # character/room objects in CSV...
-    def import_data(self, filename):
-        with open(filename,'r') as fin:
-            dr = csv.DictReader(fin) # comma is default delimiter
-            for i in dr:
-                uui = i['uui']
-                name = i['name']
-                description = i['description']
-                exits = i['exits']
-                characters = i['characters']
-        self.add_room((uui, name, description, exits, characters))
+    
+    def create_itemsDB(self):
+        '''create a item database table if it does not exist already'''
+        self.cur.execute("CREATE TABLE IF NOT EXISTS items \
+                                            (name TEXT, \
+                                            description TEXT, \
+                                            visible TEXT)")
     
 
     def commit(self):
@@ -79,6 +77,7 @@ class Database(object):
            data...'''
         self.cur.executemany('REPLACE INTO rooms VALUES(?, ?, ?, ?, ?)', \
                             (many_new_data,))
+        self.commit()
 
 
     def execute_users(self, many_new_data):
@@ -87,6 +86,16 @@ class Database(object):
         data...'''
         self.cur.executemany('REPLACE INTO users VALUES(?, ?, ?, ?, ?, ?)', \
                     (many_new_data,))
+        self.commit()
+
+
+    def execute_items(self, many_new_data):
+        '''replace user database data. only to be used internally
+        to update existing entries, otherwise will create new entry with 
+        data...'''
+        self.cur.executemany('REPLACE INTO items VALUES(?, ?, ?)', \
+                    (many_new_data,))
+        self.commit()
     
 
     def add_room(self,data):
@@ -98,6 +107,7 @@ class Database(object):
                               (?, ?, ?, ?, ?)", (uui, name, description, \
                                                     exits, characters))
             status = "success"
+            # self.commit()
         else:
             status = "Error: room [" + str(uui) + ", " + \
                       str(name) + "] already in table"
@@ -107,22 +117,33 @@ class Database(object):
 
     def add_user(self,data):
         '''attempt to add a single user to the database'''
-        print('hello')
         username, pswd, desc, location, inventory, hp = data
         if (self.in_users(username) == False):
-            print("false")
             self.cur.execute("INSERT INTO users (username, password, \
                                                 description, location, \
                                                 inventory, hp) VALUES \
                               (?,?,?,?,?,?)", (username, pswd, desc, location, \
                                                inventory, hp))
             status = "success"
+            self.commit()
         else:
             status = "Error: character [" + str(username) + ", " + \
                       str(pswd) + "] already in table"
     
         return status
-    
+
+
+    def add_item(self,data):
+        '''attempt to add a single user to the database'''
+        name, description, visible = data
+        
+        self.cur.execute("INSERT INTO items (name, description, visible) \
+                          VALUES (?,?,?)", (name, description, str(visible)))
+        self.commit()
+
+        
+        
+
 #############################################################
 
 ################ CHECK FOR ROW/CONTENTS IN DB ################
@@ -178,9 +199,17 @@ class Database(object):
 
         exits = []
         exit_dict = room.getExits()
+
+        directions = exit_dict.keys()
+        directions = list(directions)
+        index = 0
+
         for val in exit_dict.values():
+            display_name = val.getDisplayName()
             unique_id = val.getUniqueID()
-            exits.append(str(unique_id))
+            exits.append("[" + str(unique_id) + " " + str(display_name) + \
+                         " " + directions[index] + "]")
+            index += 1
 
         characters = []
         char_dict = room.getCharacters()
@@ -196,7 +225,6 @@ class Database(object):
     
     def retrieve_room(self, data):
         boolean, row = self.in_rooms(data)
-        print(row)
         if boolean == True:
             uui = row[0][0]
             name = row[0][1]
@@ -204,11 +232,13 @@ class Database(object):
             room = Room(uui, name, description)
             
             
-            # exits = self.retrieve_room((row[0][3]).strip("[]").strip("''"))
-            print(row[0][3])
-            # this is where cycle continues... for exit in exits, retrieve room
-            #     MUST be a character in a room for it to exist
-            #     infinite loop bc one exit --> other exit --> back to og exit
+            
+            exits = self.retrieve_exits(row[0][3])
+            for exit in exits:
+                split = exit.split(" ")
+                identifiers = str(split[0]) + " " + str(split[1])
+                direction = str(split[2])
+                room.addNeighbor(identifiers, direction)
 
 
             characters = self.retrieve_character(row[0][4], room)
@@ -216,6 +246,18 @@ class Database(object):
                 room.addCharacter(character)
 
             return room
+    
+    def retrieve_exits(self, room_exits):
+        res = re.findall(r'\[.*?\]', room_exits.strip("").strip("[]"))
+
+        exits = []
+
+        for item in range(len(res)):
+            exit = res[item].strip("[]")
+            exits.append(exit)
+        
+        return exits
+
 
     def retrieve_character(self, room_characters, room):
 
@@ -253,3 +295,14 @@ class Database(object):
         hp = data[0][5]
         
         return (name, password, description, location, items, hp)
+
+    
+    def return_all_rooms(self):
+        self.cur.execute('SELECT * from rooms')
+        db = self.cur.fetchall()
+
+        rooms = []
+        for entry in db:
+            rooms.append(self.retrieve_room(entry[0]))
+
+        return rooms
