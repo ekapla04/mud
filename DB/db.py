@@ -50,7 +50,8 @@ class Database(object):
         self.cur.execute("CREATE TABLE IF NOT EXISTS items \
                                             (name TEXT, \
                                             description TEXT, \
-                                            visible TEXT)")
+                                            visible TEXT, \
+                                            in_possession TEXT)")
     
 
     def commit(self):
@@ -93,7 +94,7 @@ class Database(object):
         '''replace user database data. only to be used internally
         to update existing entries, otherwise will create new entry with 
         data...'''
-        self.cur.executemany('REPLACE INTO items VALUES(?, ?, ?)', \
+        self.cur.executemany('REPLACE INTO items VALUES(?, ?, ?, ?)', \
                     (many_new_data,))
         self.commit()
     
@@ -101,7 +102,7 @@ class Database(object):
     def add_room(self,data):
         '''attempt to add a single room to the room database'''
         uui, name, description, exits, characters = data
-        boolean, result = self.in_rooms((uui, name))
+        boolean, result = self.in_rooms(uui)
         if (boolean == False):
             self.cur.execute("INSERT INTO rooms VALUES \
                               (?, ?, ?, ?, ?)", (uui, name, description, \
@@ -115,33 +116,60 @@ class Database(object):
         return status
     
 
-    def add_user(self,data):
+    def add_user(self,user):
         '''attempt to add a single user to the database'''
-        username, pswd, desc, location, inventory, hp = data
-        if (self.in_users(username) == False):
+        username = user.get_name()
+        pswd = user.get_pswd()
+        desc = user.get_desc()
+        location = user.getLocation()
+        items = user.getInventory()
+        hp = user.getHP()
+
+        inventory = ""
+        for item in items:
+            inventory += item.getName() + ", "
+
+        bool, information = self.in_users(username)
+        if (bool == False):
+            print("false")
             self.cur.execute("INSERT INTO users (username, password, \
                                                 description, location, \
                                                 inventory, hp) VALUES \
                               (?,?,?,?,?,?)", (username, pswd, desc, location, \
                                                inventory, hp))
             status = "success"
-            self.commit()
+            # self.commit()
         else:
+            print("true")
             status = "Error: character [" + str(username) + ", " + \
                       str(pswd) + "] already in table"
     
         return status
 
 
-    def add_item(self,data):
+    def add_item(self,item):
         '''attempt to add a single user to the database'''
-        name, description, visible = data
-        
-        self.cur.execute("INSERT INTO items (name, description, visible) \
-                          VALUES (?,?,?)", (name, description, str(visible)))
-        self.commit()
+        users = Database("users.db")
+        rooms = Database("rooms.db")
 
+        name = item.getName()
+        description = item.getDescription()
+        visible = item.isVisible()
+        in_possession = item.inPossession()
         
+
+        # in_rooms, room = rooms.in_rooms(in_possession)
+        # in_users, user = users.in_users(in_possession)
+        # if (in_rooms == False and in_users == False):
+        #     print("not a valid possessor")
+        # else:
+        #     print("booyah")
+        
+        self.cur.execute("INSERT INTO items (name, description, \
+                          visible, in_possession) VALUES (?,?,?,?)", \
+                          (name, description, str(visible), \
+                           in_possession))
+        # self.commit()        
         
 
 #############################################################
@@ -149,7 +177,7 @@ class Database(object):
 ################ CHECK FOR ROW/CONTENTS IN DB ################
 
     def in_rooms(self, uui):
-        '''check for username/password match in database'''
+        '''check for room existence in database'''
         self.cur.execute('SELECT * from rooms WHERE \
                                    uui="%s"'\
                                    %(uui,))
@@ -171,6 +199,22 @@ class Database(object):
         else:
             return False, ("Error: character [" + str(username) + \
                           "] not in table")
+
+    def in_items(self, data):
+        '''check for item in database. can be in possession of a room or a
+           user'''
+
+        name, in_possession = data
+
+        self.cur.execute('SELECT * from items WHERE name="%s" AND \
+                        in_possession="%s"' %(name, in_possession,))
+
+        result = self.cur.fetchall()
+        if(len(result) > 0):
+            return True, result
+        else:
+            return False, ("Error: item [" + str(name) + \
+                          "] not in possession of " + str(in_possession))
     
 #############################################################
 
@@ -264,6 +308,7 @@ class Database(object):
         res = re.findall(r'\[.*?\]', room_characters.strip("").strip("[]"))
 
         users = Database("users.db")
+        items_db = Database("items.db")
 
         characters = []
 
@@ -276,8 +321,8 @@ class Database(object):
                 location, items, hp = users.retrieve_character_data(result)
 
                 character = Character(name, password, description, location)
-                for item in items:
-                    # this will need to be tweaked bc need item db
+                for i in items:
+                    in_items, item = items_db.in_items((i, character.get_name()))
                     character.addToInventory(item)
                 character.updateHP(hp)
 
