@@ -172,6 +172,20 @@ class Database(object):
         # self.commit()        
         
 
+    def update_user_items(self, user, item_name):
+        bool, result = self.in_users(user)
+        print(result)
+        if (result[0][4] == ""):
+            item_name = item_name
+        else:
+            item_name = result[0][4] + ", " + item_name
+
+        if (bool == True):
+            self.cur.execute("UPDATE users SET inventory = '%s' \
+                                where username = '%s'" %(item_name,user,))
+        bool, result = self.in_users(user)
+        print(result)
+
 #############################################################
 
 ################ CHECK FOR ROW/CONTENTS IN DB ################

@@ -22,20 +22,7 @@ def main():
     roomC.addNeighbor(roomB, "West")
     roomC.addNeighbor(roomA, "East")
 
-
-    # add characters to database (in theory this is done upon creation of account)
-    # integrity error seemingly not catching when i try to reload a previously 
-    # seen user?
-    # characters.add_user(("pw","nyc", "blonde", 21 ,"dog, cat, arrow","100"))
-    # characters.add_user(("janine","swimlover", "gray hair", 21 ,"dog, cat, arrow","100"))
-    # characters.add_user(("janice","camping123", "black hair", 21 ,"dog, cat, arrow","100"))
-    # characters.add_user(("janet","cooldog", "brunette", 21 ,"dog, cat, arrow","100"))
-    # characters.add_user(("sk","rw", "brunette", 21 ,"dog, cat, arrow","100"))
-    # characters.execute_users(("ek","ls", "blonde", 21 ,"dog, cat, arrow","100"))
-    # characters.execute_users(("mj","ilovepurple", "ginger", 34 ,"dog, cat, arrow","100"))
-    # characters.commit()
-
-    # create character objects, add them to rooms
+    # create character objects, add them to room objects
     characterA = Character("ek", "ls", "tall and blonde", 21)
     characterB = Character("sk", "rw", "brunette with brown eyes", 21)
     characterC = Character("mj","ilovepurple", "ginger", 34)
@@ -44,22 +31,36 @@ def main():
     roomA.addCharacter(characterB)
     roomB.addCharacter(characterC)
 
+
+    # create item object, add it to database
     itemA = Items("sock", "purple with polkadots", True, "ek")
-    # items.add_item(("sock", "purple with polkadots", "True", "ek"))
     items.add_item(itemA)
 
     itemB = Items("backpack", "holds magic coin", True, "ella")
     items.add_item(itemB)
 
+    itemC = Items("rock", "smooth and shiny", True, "ek")
+    items.add_item(itemC)
+
+    # add inventory to character object
     characterD.addToInventory(itemA)
     characterD.addToInventory(itemB)
 
+    # add character objects to database
     characters.add_user(characterD)
+    characters.add_user(characterA)
+    characters.add_user(characterB)
+    characters.add_user(characterC)
     boolA, resultA = items.in_items(("backpack", "ella"))
     boolB, resultB = items.in_items(("barkpik", "ella"))
     boolC, resultC = items.in_items(("backpack", "ells"))
-    print(resultB)
-    print(resultC)
+    # print(resultB)
+    # print(resultC)
+
+    # for this to be a meaningful update, item object should have been created
+    # and added to datebase with user it's intended for
+    characters.update_user_items("ek", "sock")
+    characters.update_user_items("ek", "rock")
 
     # load room objects into database... already done, so comment out to avoid
     # integrity error... will crash if try to reload it, maybe use try-catch?
@@ -72,9 +73,9 @@ def main():
     roomC = rooms.retrieve_room((21))
     # print(roomC.getDisplayName())
     # print(roomC.getExits())
-    print(roomC.getIn)
+    # print(roomC.getIn)
     returned_rooms = rooms.return_all_rooms()
-    # print(returned_rooms)
+    print(returned_rooms)
 
 
 main()
