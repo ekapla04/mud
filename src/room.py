@@ -168,3 +168,6 @@ class Room():
     
     def getCharacters(self):
         return self.__characters
+    
+    def getItems(self):
+        return self.__items
