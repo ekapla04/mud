@@ -2,9 +2,9 @@
     Class representing room object
 '''
 from threading import Lock
-from src.combat import Combat
+from combat import Combat
 
-from src.character import Character
+from character import Character
 
 class Room():
 
