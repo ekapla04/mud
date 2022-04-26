@@ -84,22 +84,27 @@ class Database(object):
     
     def delete_user_from_users(self, username):
         '''deletes specified user from users DB'''
-
+        in_users, users_result = self.in_users(username)
+        location = users_result[0][3]
         self.cur.execute("DELETE FROM users where username = '%s'" %(username,))
         self.commit()
+        self.delete_user_from_room(username, location)
     
     def delete_user_from_room(self, username, uui):
         '''deletes specified user from specified room'''
         
         in_rooms, rooms_result = self.in_rooms(uui)
-        characters = rooms_result[0][4].replace("[" + username + "]", "")
-
+        username = "[" + username + "]"
+        print("username: " + username)
+        characters = ""
         if (in_rooms == True):
-            print("character not in room yet")
-            self.cur.execute("UPDATE rooms SET characters = '%s' \
-                                where uui = '%s'" %(characters, uui,))
+            if username in rooms_result[0][4]:
+                characters = rooms_result[0][4].replace(username, "").replace(",", "")
+            # print("character not in room yet")
+                self.cur.execute("UPDATE rooms SET characters = '%s' \
+                                    where uui = '%s'" %(characters, uui,))
+                self.commit()
 
-            self.commit()
 
     
     def delete_item_from_users(self, item_name, in_possession):
@@ -108,7 +113,7 @@ class Database(object):
            all items will be deleted'''
 
         in_users, users_result = self.in_users(in_possession)
-        users = users_result[0][4].replace(item_name, "")
+        users = users_result[0][4].replace(item_name, "").replace(",", "")
 
         if (in_users == True):
             self.cur.execute("UPDATE users SET inventory = '%s' \
@@ -123,11 +128,34 @@ class Database(object):
 
     
     def change_user_room(self, username, uui):
+        '''changes location of user from one room to another. updates
+           user entry & updates room user logs'''
+        
         user_db = Database("users.db")
-        rooms_db = Database("rooms.db")
 
-        in_users, user_result = self.in_users(username)
+        in_users, user_result = user_db.in_users(username)
+
+        if (in_users == True):
+            user_db.cur.execute("UPDATE users SET location = '%s' \
+                                where username = '%s'" %(uui, username,))
+            user_db.commit()
+    
+
+    def room_swap(self, origin, destination, username):
+        self.change_user_room(username, destination)
+        self.delete_user_from_room(username, origin)
+        self.update_room_characters(destination,username)
+
+                
+    def add_user_to_room(self, user, uui):
+        print("add user to room")
         in_rooms, room_result = self.in_rooms(uui)
+
+        if (in_rooms == True):
+            users = str(room_result[0][4]) + "[" + str(user) + "]"
+            print(users)
+            self.cur.execute("UPDATE rooms SET characters = '%s' \
+                                where uui = '%s'" %(users, uui,))
                 
 
 #############################################################
