@@ -12,10 +12,11 @@ class Room():
         self.__id = id
         self.__displayName = name
         self.__description = description
-        self.__exits = {}
-        self.__characters = {}  #dic of chars as keys and combat as val
+        self.__exits = {}       # dict of exit names to room objects
+        self.__characters = {}  #dic of character names to characters
         self.__items = []       #is it a list of dic
-        self.__combats = []
+        self.__combats = {}     # dict of combats objects to [fighters]
+
         self.__charLock = Lock()
         self.__combatsLock = Lock()
         self.__itemLock = Lock()
@@ -35,7 +36,7 @@ class Room():
         '''
         try:
             self.__charLock.acquire()
-            self.__characters[character] = False
+            self.__characters[character.get_name()] = character
             status = "success"
         except:
             status = "Error"
@@ -44,44 +45,74 @@ class Room():
 
         return status
 
-    def challenge(self, challenger, challenged):
-        '''
-            Method to manage combat challenges
-
+    def removeCharacter(self, character):
+        """
+            Removes a character from the room
+            
             Parameters:
-            ----------
-            challenger: character object who initial challenge
-            challenged: character object being challenged
+            -------
+            character - the character object to remove
 
             Return:
             -------
             status: string (message whether system succeeded or failed)
-        '''
+        """
         try:
             self.__charLock.acquire()
-            combatStatus = self.__characters(challenged)
-            challengedLocation = challenged.getLocation()
-
-            if challengedLocation == self.__id:
-                if not combatStatus:            #check whether challenged is not in other combat
-                    combatRoom = Combat(challenger, challenged) # create combat room
-                    with self.__combatsLock:    # require lock for combat rooms
-                        self.__combats.append(combatRoom) # add room to combats room
-
-                    combatRoom.start()          # initiate the fight
-                    status = "success"
-                else:
-                    status = "Error: challenged denied"
-            else:
-                status = "Error: cannot challenger user in a different room"
+            if character.get_name() in self.__characters:
+                self.__characters.pop(character.get_name())
+            status = "success"
         except:
             status = "Error"
-        finally:
+        else:
             self.__charLock.release()
 
-        return status
+    # def challenge(self, challenger, challenged):
+    #     '''
+    #         Method to manage combat challenges
 
-    def broadcast(self, sender, message):
+    #         Parameters:
+    #         ----------
+    #         challenger: character object who initial challenge
+    #         challenged: character object being challenged
+
+    #         Return:
+    #         -------
+    #         status: string (message whether system succeeded or failed)
+    #     '''
+    #     try:
+    #         self.__charLock.acquire()
+    #         combatStatus = self.__characters(challenged)
+    #         challengedLocation = challenged.getLocation()
+
+    #         if challengedLocation == self.__id:
+    #             if not combatStatus:            #check whether challenged is not in other combat
+    #                 combatRoom = Combat(challenger, challenged) # create combat room
+    #                 with self.__combatsLock:    # require lock for combat rooms
+    #                     self.__combats.append(combatRoom) # add room to combats room
+
+    #                 combatRoom.start()          # initiate the fight
+    #                 status = "success"
+    #             else:
+    #                 status = "Error: challenged denied"
+    #         else:
+    #             status = "Error: cannot challenger user in a different room"
+    #     except:
+    #         status = "Error"
+    #     finally:
+    #         self.__charLock.release()
+
+    #     return status
+
+    def addCombat(self, combat):
+        with self.__combatsLock:
+            self.__combats[combat] = combat.list_fighters()
+
+    def removeCombat(self, combat):
+        with self.__combatsLock:
+            self.__combats.delete(combat)
+
+    def broadcast(self, sender, message, code="msg"):
         '''
             Method to broadcast message to all users in the room except the sender
 
@@ -91,11 +122,11 @@ class Room():
             message: string (message to broadcast)
         '''
         with self.__charLock:
-            for char in self.__characters.keys():
+            for char in self.__characters.values():
                 if char.get_name() != sender.get_name():
-                    char.message(message)
+                    char.message(message, code)
 
-    def broadcast_all(self, sender, message):
+    def broadcast_all(self, sender, message, code="msg"):
         '''
                     Method to broadcast message to all users in the room
 
@@ -105,8 +136,8 @@ class Room():
                     message: string (message to broadcast)
                 '''
         with self.__charLock:
-            for char in self.__characters.keys():
-                char.message(message)
+            for char in self.__characters.values():
+                char.message(message, code)
     
     def addNeighbor(self, neighbor, exitname):
         '''
@@ -168,3 +199,37 @@ class Room():
     
     def getCharacters(self):
         return self.__characters
+
+    def getCombat(self, character):
+        result = None
+        with self.__combatsLock:
+            for combat, fighters in self.__combats.items():
+                if character in fighters:
+                    result = combat
+                    break
+        return result
+
+    def is_fighting(self, character):
+        """
+            Returns True if character is fighting and False otherwise
+
+            ------
+            character - character object
+        """
+        result = False
+
+        # Check if the given character is fighting
+        with self.__combatsLock:
+            for combat in self.__combats.keys():
+                print(combat)
+                result = result or combat.is_in(character)
+        return result
+            
+    def isPresent(self, char_name):
+        """
+            Checks if the named character is present
+        """
+        result = False
+        with self.__charLock:
+            result = char_name in self.__characters
+        return result

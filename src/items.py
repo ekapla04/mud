@@ -4,11 +4,10 @@
 from threading import Lock
 
 class Items:
-    def __init__(self, name, desc, isVisible, inPossession):
+    def __init__(self, name, desc, isVisible):
         self.__name = name
         self.__description = desc
         self.__isVisible = isVisible
-        self.__inPossession = inPossession
         self.__mutex = Lock()
     
     def reaction(self):
@@ -21,9 +20,6 @@ class Items:
     def getDescription(self):
         return self.__description
 
-    def inPossession(self):
-        return self.__inPossession
-
     def setVisibility(self, value):
         with self.__mutex:
             self.__isVisible = value
@@ -31,4 +27,5 @@ class Items:
     def isVisible(self):
         with self.__mutex:
             res = self.__isVisible
+
         return res

@@ -1,15 +1,17 @@
 '''
     Class representing character object
 '''
+
+import sys
+sys.path.append("pypackages")
+
 from threading import Lock
 from src.command import Command
+import websockets
+import json
+import asyncio
 
-
-
-
-
-class Character():
-
+class Character:
     def __init__(self, name, pswd, descr, room):
         self.__name = name
         self.__description = descr
@@ -18,11 +20,19 @@ class Character():
         self.__inventory = []
         self.__hp = 100
         self.__commands = {}
-        self.__hpMutex = Lock()
-        self.message = self.__message_not_set
+        self.__hpMutex = Lock()        
+        self.__locationLock = Lock()
+        self.__is_fighting = False
+
+        # Related to connection
+        self.websocket = None
+        self.doing_commands = True
+        self.message_queue = asyncio.Queue()
     
     def getLocation(self):
         return self.__location
+    def setLocation(self, room):
+        self.__location = room
 
     def addToInventory(self, item):
         '''
@@ -46,6 +56,11 @@ class Character():
         '''
         with self.__hpMutex:
             self.__hp += score
+
+    def decrementHP(self):
+        with self.__hpMutex:
+            if not self.__hp == 0:
+                self.__hp == self.__hp - 1
 
     def getHP(self):
         '''
@@ -76,9 +91,6 @@ class Character():
     def get_desc(self):
         return self.__description
 
-    def get_pswd(self):
-        return self.__pswd
-
 
     # None of these are protected with a mutex under the assumption that
     # After the character is initialized, we don't change them
@@ -98,9 +110,34 @@ class Character():
     def get_commands(self):
         return self.__commands
 
-    def message_location(self, msg):
+    def message_location(self, msg, code="msg"):
         """
             Message all users in the current room except yourself
         """
-        self.__location.broadcast(self, msg)
+        self.__location.broadcast(self, msg, code)
 
+    def message(self, msg, code="msg"):
+        """
+            Message the user
+        """
+        if not self.websocket is None:
+            websockets.broadcast({self.websocket}, json.dumps({"type":code, "text":msg}))
+        else:
+            print("Websocket not set :(")
+
+    def set_socket(self, web_socket):
+        self.websocket = web_socket
+
+    def is_fighting(self):
+        """
+            Return True if the character is in combat and False otherwise
+        """
+        result = False
+        with self.__hpMutex:
+            # result = self.__location.is_fighting(self)
+            result = self.__is_fighting
+        return result
+
+    def set_is_fighting(self, bool):
+        with self.__hpMutex:
+            self.__is_fighting = True

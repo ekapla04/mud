@@ -4,7 +4,7 @@
 '''
 from threading import Lock
 import uuid
-from room import Room
+from src.room import Room
 
 class Map:
     def __init__(self):
