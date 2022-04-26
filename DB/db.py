@@ -11,6 +11,7 @@ import re
 # TODO:
     # write function to delete item from user inventory
     # write function to delete item from item DB
+    # function to change room character is in --> location field
 
 
 class Database(object):
@@ -99,6 +100,35 @@ class Database(object):
                                 where uui = '%s'" %(characters, uui,))
 
             self.commit()
+
+    
+    def delete_item_from_users(self, item_name, in_possession):
+        '''deletes specified item from users inventory. if item not in 
+           inventory, nothing happens. if multiple items with same name, 
+           all items will be deleted'''
+
+        in_users, users_result = self.in_users(in_possession)
+        users = users_result[0][4].replace(item_name, "")
+
+        if (in_users == True):
+            self.cur.execute("UPDATE users SET inventory = '%s' \
+                                where username = '%s'" %(users, in_possession,))
+
+            self.commit()
+    
+    def delete_item_from_items(self, item, in_possession):
+        self.cur.execute("DELETE FROM items where name = '%s' and \
+                          in_possession = '%s'" %(item, in_possession,))
+        self.commit()
+
+    
+    def change_user_room(self, username, uui):
+        user_db = Database("users.db")
+        rooms_db = Database("rooms.db")
+
+        in_users, user_result = self.in_users(username)
+        in_rooms, room_result = self.in_rooms(uui)
+                
 
 #############################################################
 

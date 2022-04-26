@@ -52,6 +52,13 @@ def main():
     items.add_item(itemD)
     items.add_item(itemE)
 
+    in_items, item_result = items.in_items("backpack", "21")
+    # print(item_result)
+
+    items.delete_item_from_items("backpack", "21")
+    in_items, item_result = items.in_items("backpack", "21")
+    print(item_result)
+
     # add item to room object (this must happen in addition to item being added
     # to room entry in room DB... item can be added to room entry two different 
     # ways:
@@ -83,12 +90,16 @@ def main():
 
     # for this to be a meaningful update, item object should have been created
     # and added to datebase with user it's intended for
-    # characters.update_user_items("ek", "sock")
+    characters.update_user_items("ek", "sock")
     # characters.update_user_items("ek", "rock")
 
     # characters.delete_user("ek")
-    # bool, ek = characters.in_users("ek")
-    # print(ek)
+    bool, ek = characters.in_users("ek")
+    print(ek)
+
+    characters.delete_item_from_users("backpack", "ek")
+    bool, ek = characters.in_users("ek")
+    print(ek)
 
     # load room objects into database... already done, so comment out to avoid
     # integrity error... will crash if try to reload it, maybe use try-catch?
