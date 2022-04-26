@@ -143,10 +143,47 @@ commands = Command("commands", [], _commands_callback)
 async def _map_callback(character, args, gamestate):
     character.message("You asked for a map...", "map")
 
-    max_depth = 3
+    location = character.getLocation()
 
-    arr = [[0 for i in range(max_depth)] for j in range(max_depth)]
-    pass
+    max_depth = 3
+    worm_pos = {"row": max_depth, "col": max_depth}
+
+    arr = [["   " for i in range(max_depth * 2 + 1)] for j in range(max_depth * 2 + 1)]
+
+    visited = set()
+    queue = [(location, worm_pos, 0)]
+
+    while queue:
+        loc, pos, depth = queue.pop(0)
+
+        visited.add(loc)
+
+        arr[pos["row"]][pos["col"]] = "[ ]"
+
+        if depth == 3:
+            continue
+
+        for name, dest in loc.getExits().items():
+            if dest in visited:
+                continue
+
+            if name == "north":
+                queue.append((dest, {"row": pos["row"] + 1, "col": pos["col"]}, depth + 1))
+            elif name == "south":
+                queue.append((dest, {"row" :pos["row"] - 1, "col": pos["col"]}, depth + 1))
+            elif name == "east":
+                queue.append((dest, {"row" :pos["row"], "col": pos["col"] + 1}, depth + 1))
+            elif name == "west":
+                queue.append((dest, {"row" :pos["row"], "col": pos["col"] - 1}, depth + 1))
+            else:
+                print("Exit not north, south, east or west :(")
+
+
+
+
+
+    for row in arr:
+        print(row)
 
 show_map = Command("map", [], _map_callback)
 
