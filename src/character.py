@@ -18,7 +18,7 @@ class Character:
         self.__location = room
         self.__pswd = pswd
         self.__inventory = []
-        self.__hp = 100
+        self.__hp = 3
         self.__commands = {}
         self.__hpMutex = Lock()        
         self.__locationLock = Lock()
@@ -60,7 +60,7 @@ class Character:
     def decrementHP(self):
         with self.__hpMutex:
             if not self.__hp == 0:
-                self.__hp == self.__hp - 1
+                self.__hp = self.__hp - 1
 
     def getHP(self):
         '''
@@ -91,6 +91,11 @@ class Character:
     def get_desc(self):
         return self.__description
 
+    def get_pswd(self):
+        return self.__pswd
+
+    def compare_pswd(self, pswd):
+        return self.__pswd == pswd
 
     # None of these are protected with a mutex under the assumption that
     # After the character is initialized, we don't change them
@@ -140,4 +145,4 @@ class Character:
 
     def set_is_fighting(self, bool):
         with self.__hpMutex:
-            self.__is_fighting = True
+            self.__is_fighting = bool

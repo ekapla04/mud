@@ -5,6 +5,9 @@ var you = {};
 you.avatar = "";
 
 var websocket = "";
+var commands = ["say", "look", "map", "move", "login", "commands", 
+                "challenge", "duel", "block", "strike", "ready",
+                "yes", "no", "y", "n"];
 
 function formatAMPM(date) {
     var hours = date.getHours();
@@ -57,14 +60,30 @@ function resetChat(){
     $("ul").empty();
 }
 
+function verifyInput(text){
+    str = text.trim();
+    strs = str.split(" ");
+    console.log(str.slice(0,4));
+    if ((strs.length > 1 && commands.includes(strs[0])) || commands.includes(str.slice(0,4)) || commands.includes(str)){
+        // console.log(strs);
+        return true
+        
+    }else {
+        return false
+    }
+}
+
 $(".mytext").on("keydown", function(e){
         if (e.which == 13){
             var text = $(this).val();
             console.log("And we should send it: ", text);
-            if (text !== ""){
+            if (verifyInput(text)){
                 insertChat("me", text);
                 $(this).val('');
                 websocket.send(text);
+            }else{
+                insertChat("you", "Invalid commad: " + text);
+                $(this).val('');
             }
         }
     });
@@ -77,18 +96,15 @@ $('body > div > div > div:nth-child(2) > span').click(function(){
 // resetChat();
 
 window.addEventListener("DOMContentLoaded", () => {
-    insertChat("you", "Hello, to connect to server type: login//YOURUSERNAME//PASSWORD", 0);
-    insertChat("you", "Basic commands: <br> say, \n look, \n map, \n move"); 
-    // insertChat("you", "Hi, Pablo", 1500);
-    // insertChat("me", "What would you like to talk about today?", 3500);
-    // insertChat("you", "Tell me a joke",7000);
-    // insertChat("me", "Spaceman: Computer! Computer! Do we bring battery?!", 9500);
-    // insertChat("you", "LOL", 12000);
+    
+    insertChat("you", "Basic commands: <br> &nbsp;&nbsp;&nbsp;&nbsp;say,<br> \
+        &nbsp;&nbsp;&nbsp;&nbsp; look <br> &nbsp;&nbsp;&nbsp;&nbsp; map,<br>\
+        &nbsp;&nbsp;&nbsp;&nbsp; move <br> <br> Use: commad message: eg: \
+        say hello everyone!" ); 
 
-
+    // Connect to the server
     websocket = new WebSocket("ws://localhost:8001/");
-
-
+    
     function receive_message(msg){
         console.log("Message received: ", msg)
         // identify whether it's msg, map, or error
@@ -96,18 +112,37 @@ window.addEventListener("DOMContentLoaded", () => {
         var data = JSON.parse(msg["data"]);
         console.log(data)
         // outlog.append(`<p class='from_server'>${data["text"]}</p>`)
-        insertChat("you", data["text"], 3);
+        if (data["type"] === "msg"){
+            if (data["text"] !== "Enter login string:"){
+                insertChat("you", data["text"], 3);
+            }
+            
+        } else if (data["type"] === "map"){
+            console.log("Display map", data["text"]);
+            $(".mapper .scndCol").html(data["text"]);
+         } else if (data["type"] === "err") {
+             msg = data["text"].slice(0,9)
+             if (msg == "Bad login"){
+                document.location.replace("./signup_login.html");
+                alert("The pass word you entered was invalid, or the character name \
+was already taken. :(")
+             }
+         
+        } else {
+            console.log("Error: ", data["text"]);
+        }
     }
-
-
-
 
 
     websocket.onmessage = receive_message;
 
+    var loginUsername = localStorage.getItem("logName");
+    var loginPass = localStorage.getItem("logPass");
+    var logCommand = "login//" + loginUsername + "//" + loginPass
+    console.log("input ", logCommand);
+
+    // log user
+    websocket.onopen = () => websocket.send(logCommand);
+
   });
 
-
-
-
-//-- NOTE: No use time on insertChat.

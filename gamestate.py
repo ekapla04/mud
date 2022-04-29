@@ -1,5 +1,4 @@
 import sys
-# sys.path.append("/Users/madeleinestreet/Documents/GitHub/mud/src")
 
 from src.character import Character
 from src.map import Map
@@ -16,8 +15,26 @@ class GameState:
         self.load_world()
 
     def connect_character(self, name, password, websocket):
-        # Create the character object
-        char =  Character(name, password, "A gentle soul with blond hair", self._Map.get_room("atrium"))
+        exists, result = self._db.in_users(name)
+        
+        char = None
+
+        if exists:
+            char = self._db.retrieve_user(name)
+            # Put character in the correct location
+            loc = self._Map.get_room(char.getLocation().lower().strip())
+            char.setLocation(loc)
+            loc.addCharacter(char)
+
+            if not char.compare_pswd(password.strip()):
+                return "Passwords do not match!" 
+
+        else:
+            loc = self._Map.get_room("atrium")
+            char =  Character(name, password, "A gentle soul shrouded in mist.", loc)
+            self._db.add_user(char)
+            loc.addCharacter(char)
+
         
         # Attatch the message function
         char.set_socket(websocket)
@@ -25,24 +42,42 @@ class GameState:
         # Attatch commands
         char.load_command_set(default_cmd_set())
 
-        # Add character to room
-        self._Map.get_room("atrium").addCharacter(char)
-
         # Add the character to the list of connected characters
         self._characters[char.get_name()] = char
-
 
         return "ok"
 
 
     def disconnect_character(self, name):
         if name in self._characters:
-            self._characters.pop(name)
+            char = self._characters.pop(name)
+
+            # Remove the character from their location
+            location = char.getLocation()
+            if not location is None:
+                location.removeCharacter(char)
+                location.broadcast_all(char, f"{char.get_name().capitalize()} has disconnected.")
+
+            # Remove character from their combats if any
+            combat = location.getCombat(char)
+            if not combat is None:
+                combat.disconnect_character(char)
+
+            self._db.change_user_room(char.get_name(), location.getUniqueID())
 
 
     def create_character(self, name, password, roomname, websocket):
-        self.connect_character(name, password, websocket)
-        return "ok"
+        exists, toss = self._db.in_users(name)
+        print(f"exists {exists}")
+
+        if not exists:
+            char = Character(name, password, "A gentle soul shrouded in mist.", self._Map.get_room("atrium"))
+            print("add attempt  ", self._db.add_user(char))
+            self.connect_character(name, password, websocket)
+            return "ok"
+        else:
+            return "username already in use"
+
 
     def load_world(self):
         print("Loading world")
@@ -52,21 +87,12 @@ class GameState:
         # make a temporary map
         self._Map = Map()
 
-        self._Map.roomFromNameID("Atrium", "atrium", """A two story tall atrium with grand windows, \
-            a central fountain and an excess of green leafy plants.""")
-        self._Map.roomFromNameID("Main Hall", "mainhall", """A large, extravagant entry hall.\
-            The walls are mirrored and at the far end is a large sliding glass door.""")
-        self._Map.roomFromNameID("Sitting Room", "sittingroom", """A lush sitting room with \
-        luminescent green couches. An intricte portrait of a young woman hangs above the mantle. """)
+        rooms = self._db.return_all_rooms()
+        for room in rooms:
+            self._Map.addRoom(room)
+        
+        self._Map.linkExits()
 
-        atrium = self._Map.get_room("atrium")
-        mainhall = self._Map.get_room("mainhall")
-        sittingroom = self._Map.get_room("sittingroom")
-
-        atrium.addNeighbor(mainhall, "south")
-        mainhall.addNeighbor(atrium, "north")
-        atrium.addNeighbor(sittingroom, "east")
-        sittingroom.addNeighbor(atrium, "west")   
 
 
         print("World loaded")
@@ -76,6 +102,7 @@ class GameState:
         print(self._characters)
         for char in self._characters.values():
             char.message(msg)
+
 
     def get_character(self, char_name):
         return self._characters.get(char_name)

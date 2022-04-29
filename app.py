@@ -11,16 +11,23 @@ import interactionutils as utils
 GAMESTATE = None
 
 
-async def echo(websocket):
-    try:
-        async for message in websocket:
-            print(f"<<< {websocket.remote_address} says: {message}")
-            websockets.broadcast({websocket}, message.upper())
-    finally:
-        print("Client disconnected")
+# async def echo(websocket):
+#     try:
+#         async for message in websocket:
+#             print(f"<<< {websocket.remote_address} says: {message}")
+#             websockets.broadcast({websocket}, message.upper())
+#     finally:
+#         print("Client disconnected")
 
 
 async def login(websocket):
+    """
+        Get and parse the login string passed to the server
+        Should have the form:
+            login // char name // password
+                or
+            create // char name // password // room name
+    """
     global GAMESTATE
     char_name = ""
 
@@ -45,6 +52,7 @@ async def login(websocket):
                 if code != "ok":
                     reprompt()
                     continue
+
             elif message[0].strip().lower() == "create":
                 if len(message) != 4:
                     reprompt()
@@ -124,11 +132,17 @@ async def MudConnection(websocket,dummy):
 
         # Main game loop
 
+        await websocket.send(json.dumps({"type": "msg", "text":f"Welcome to the Winter \
+            where the revelry lasts all night, and the night stretches into eternity. \
+            Wander the garden, test yourself against the other ghosts, be at peace."}))
+
         is_quit = False
 
+        # Enter the main game loop
         async for message in websocket:
             await character.message_queue.put(message)
 
+            # Process input as a command if the server is expecting a command
             if character.doing_commands:
                 print(f"Process {message} as command.")
                 message = await character.message_queue.get()
@@ -142,6 +156,7 @@ async def MudConnection(websocket,dummy):
                 # It's a command! Parse it >:)
                 cmd, args = parse_command(message)
                 
+                # Run the command
                 asyncio.create_task(execute_command(character, cmd, args))
 
             else:
@@ -149,7 +164,9 @@ async def MudConnection(websocket,dummy):
 
 
     finally:
+        # When a character disconnects be sure to properly remove them
         print(f"{char_name} disconnected.")
+        GAMESTATE.disconnect_character(char_name)
 
 
 # ==================== MAIN ====================

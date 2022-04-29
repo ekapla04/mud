@@ -196,6 +196,8 @@ class Room():
 
     def getExits(self):
         return self.__exits
+    def setAllExits(self, exits):
+        self.__exits = exits
     
     def getCharacters(self):
         return self.__characters
@@ -233,3 +235,6 @@ class Room():
         with self.__charLock:
             result = char_name in self.__characters
         return result
+
+    def getItems(self):
+        return self.__items

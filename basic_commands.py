@@ -124,6 +124,8 @@ async def _move_callback(character, args, gamestate):
     else:           # The exit does not exist here :(
         character.message(f"{args.capitalize()} is not an exit.")
 
+    await _map_callback(character, "", gamestate)
+
 
 move = Command("move", [], _move_callback)
 
@@ -151,14 +153,16 @@ async def _map_callback(character, args, gamestate):
     arr = [["   " for i in range(max_depth * 2 + 1)] for j in range(max_depth * 2 + 1)]
 
     visited = set()
-    queue = [(location, worm_pos, 0)]
+    queue = [(location, worm_pos, "@", 0)]
 
     while queue:
-        loc, pos, depth = queue.pop(0)
+        loc, pos, symbol, depth = queue.pop(0)
 
         visited.add(loc)
 
-        arr[pos["row"]][pos["col"]] = "[ ]"
+        
+
+        arr[pos["row"]][pos["col"]] = f"[{symbol}]"
 
         if depth == 3:
             continue
@@ -168,22 +172,27 @@ async def _map_callback(character, args, gamestate):
                 continue
 
             if name == "north":
-                queue.append((dest, {"row": pos["row"] + 1, "col": pos["col"]}, depth + 1))
+                queue.append((dest, {"row": pos["row"] - 1, "col": pos["col"]}, " ", depth + 1))
             elif name == "south":
-                queue.append((dest, {"row" :pos["row"] - 1, "col": pos["col"]}, depth + 1))
+                queue.append((dest, {"row" :pos["row"] + 1, "col": pos["col"]}, " ", depth + 1))
             elif name == "east":
-                queue.append((dest, {"row" :pos["row"], "col": pos["col"] + 1}, depth + 1))
+                queue.append((dest, {"row" :pos["row"], "col": pos["col"] + 1}, " ", depth + 1))
             elif name == "west":
-                queue.append((dest, {"row" :pos["row"], "col": pos["col"] - 1}, depth + 1))
+                queue.append((dest, {"row" :pos["row"], "col": pos["col"] - 1}, " ", depth + 1))
             else:
                 print("Exit not north, south, east or west :(")
 
 
 
 
+    message = ""
 
     for row in arr:
-        print(row)
+        row = "".join(row)
+        message += row + "<br>\n" 
+
+    character.message(message, "map")
+    print(message)
 
 show_map = Command("map", [], _map_callback)
 
@@ -247,13 +256,16 @@ async def _challenge_callback(character, args, gamestate):
         combat = Combat(character, opponent)
         location.addCombat(combat)
         result = await combat.start()
-        if result == "draw":
-            location.broadcast_all(f"{character.get_name.capitalize()} and {opponent.get_name.capitalize()} both fall to their knees. The duel is a draw.")
+        print(f"combat finished {result}")
+        if result["winner"] == "draw":
+            location.broadcast_all(character, f"{character.get_name().capitalize()} and {opponent.get_name.capitalize()} both fall to their knees. The duel is a draw.")
+        elif result["loser"] == "disconnected":
+            location.broadcast_all(character, f"{result['winner'].get_name().capitalize()} is the only one left standing. Their opponent has disconnected.")
         else:
-            location.broadcast_all(f"{result['winner'].get_name().capitalize()} defeats {result['loser'].get_name().capitalize*()} in a duel.")
+            location.broadcast_all(character, f"{result['winner'].get_name().capitalize()} defeats {result['loser'].get_name().capitalize()} in a duel.")
 
-        character.set_is_fighting(False)
-        opponent.set_is_fighting(False)
+    character.set_is_fighting(False)
+    opponent.set_is_fighting(False)
 
 challenge = Command("challenge", ["duel"], _challenge_callback)
 
@@ -299,18 +311,11 @@ async def _ready_callback(character, args, gamestate):
 ready = Command("ready", [], _ready_callback)
 
 
-async def _ask_callback(character, args, gamestate):
-    print(await utils.get_yes_no(character))
-
-ask = Command("ask", [], _ask_callback)
-
-
-
 
 
 # Define functions to export those objects as command sets
 def default_cmd_set():
-    return {ping.get_name():      ping,
+    return {
             look.get_name():      look,
             say.get_name():       say,
             move.get_name():      move, 
@@ -320,5 +325,4 @@ def default_cmd_set():
             challenge.get_name(): challenge,
             strike.get_name():    strike,
             block.get_name():     block,
-            ready.get_name():     ready,
-            ask.get_name(): ask}
+            ready.get_name():     ready}

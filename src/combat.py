@@ -18,6 +18,9 @@ class Combat:
 
         self.__actions = {}
         self.__actionsLock = Lock()
+
+        # Set to the character that disconnected first
+        self.__diconnected = None
     
     async def start(self):
         winner = None
@@ -27,6 +30,11 @@ class Combat:
         score2 = self.__fighter2.getHP()
 
         while winner is None:
+            if not self.__diconnected is None:
+                isleft = self.__fighter2 if self.__diconnected == self.__fighter1 else self.__fighter1
+                isleft.message(f"Your opponent has disconnected. You are victorious.")
+                return {"winner" : isleft, "loser": "disconnected"}
+
             prompt = "Enter your move (block, ready, strike):"
             self.__fighter1.message(prompt)
             self.__fighter2.message(prompt)
@@ -35,7 +43,7 @@ class Combat:
             with self.__actionsLock:
                 self.__actions = {}
 
-            await asyncio.sleep(5)
+            await asyncio.sleep(7)
 
             action_one = None
             action_two = None
@@ -112,10 +120,13 @@ class Combat:
 
                 self.__fighter2_numblock = 0
 
+            print(f"fighert1 - {self.__fighter1.getHP()}, fighter2 - {self.__fighter2.getHP()}")
+
 
             # Check for win condition (hp is at 0)
             if self.__fighter1.getHP() == 0 and self.__fighter2.getHP() == 0:
                 winner = "draw"
+                loser = "draw"
             elif self.__fighter1.getHP() == 0:
                 winner = self.__fighter2
                 loser  = self.__fighter1
@@ -146,7 +157,12 @@ class Combat:
         """
             Call to end a fight early because Character character has disconnected
         """
-        pass
+        if character == self.__fighter1 or character == self.__fighter2:
+            self.__diconnected = character
+        else:
+            print("Tried to disconnect a character not in this combat. There's a bug!")
+
+
 
     def is_ready(self, character):
         result = False
