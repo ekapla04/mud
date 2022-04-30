@@ -129,16 +129,6 @@ class Database(object):
         '''changes location of user from one room to another. updates
            user entry & updates room user logs'''
         
-<<<<<<< HEAD:DB/db.py
-        user_db = Database("users.db")
-
-        in_users, user_result = user_db.in_users(username)
-
-        if (in_users == True):
-            user_db.cur.execute("UPDATE users SET location = '%s' \
-                                where username = '%s'" %(uui, username,))
-            user_db.commit()
-=======
 
         in_users, user_result = self.in_users(username)
 
@@ -146,7 +136,6 @@ class Database(object):
             self.cur.execute("UPDATE users SET location = '%s' \
                                 where username = '%s'" %(uui, username,))
             self.commit()
->>>>>>> connect_server_db:db.py
     
 
     def room_swap(self, origin, destination, username):
