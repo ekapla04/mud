@@ -1,15 +1,8 @@
-# this makes it so that we can use modules held in another folder
-
 import sqlite3
 from src.room import Room
 from src.character import Character
 from src.items import Items
 import re
-
-# TODO:
-    # write function to delete item from user inventory
-    # write function to delete item from item DB
-    # function to change room character is in --> location field
 
 
 class Database(object):
@@ -29,6 +22,7 @@ class Database(object):
         elif (db_name == "items.db"):
             self.create_itemsDB()
 
+            
     def create_roomDB(self):
         '''create a room database table if it does not exist already'''
 
@@ -40,6 +34,7 @@ class Database(object):
                                                     characters TEXT, \
                                                     items TEXT)")
 
+        
     def create_userDB(self):
         '''create a user database table if it does not exist already'''
 
@@ -51,6 +46,7 @@ class Database(object):
                                             inventory TEXT, \
                                             hp INT)")
 
+        
     def create_itemsDB(self):
         '''create a item database table if it does not exist already'''
 
@@ -59,7 +55,10 @@ class Database(object):
                                             description TEXT, \
                                             visible TEXT, \
                                             in_possession TEXT)")
-    
+        
+#############################################################
+
+################ COMMIT INFO TO DB/CLOSE DB #################
     def commit(self):
         '''commit changes to database'''
 
@@ -69,40 +68,43 @@ class Database(object):
         '''close sqlite3 connection'''
 
         self.connection.close()
+        
+#############################################################
 
+#################### REMOVAL FUNCTIONS #####################
     
     def delete_room(self, roomID):
         '''deletes specified room from room DB. this is primarily for testing
            purposes -- if room is deleted in game, associated players will be 
-           in limbo bc not implenmeted so that they are also removed from
+           in limbo bc not implemented so that they are also removed from
            existence'''
 
         self.cur.execute("DELETE FROM rooms where uui = '%s'" %(roomID,))
         self.commit()
     
+    
     def delete_user_from_users(self, username):
         '''deletes specified user from users DB'''
+        
         in_users, users_result = self.in_users(username)
         location = users_result[0][3]
         self.cur.execute("DELETE FROM users where username = '%s'" %(username,))
         self.commit()
         self.delete_user_from_room(username, location)
     
+    
     def delete_user_from_room(self, username, uui):
         '''deletes specified user from specified room'''
         
         in_rooms, rooms_result = self.in_rooms(uui)
         username = "[" + username + "]"
-        print("username: " + username)
         characters = ""
         if (in_rooms == True):
             if username in rooms_result[0][4]:
                 characters = rooms_result[0][4].replace(username, "").replace(",", "")
-            # print("character not in room yet")
                 self.cur.execute("UPDATE rooms SET characters = '%s' \
                                     where uui = '%s'" %(characters, uui,))
                 self.commit()
-
 
     
     def delete_item_from_users(self, item_name, in_possession):
@@ -119,45 +121,17 @@ class Database(object):
 
             self.commit()
     
+    
     def delete_item_from_items(self, item, in_possession):
+        '''delete specified item from the item inventory'''
+        
         self.cur.execute("DELETE FROM items where name = '%s' and \
                           in_possession = '%s'" %(item, in_possession,))
         self.commit()
-
-    
-    def change_user_room(self, username, uui):
-        '''changes location of user from one room to another. updates
-           user entry & updates room user logs'''
         
-
-        in_users, user_result = self.in_users(username)
-
-        if (in_users == True):
-            self.cur.execute("UPDATE users SET location = '%s' \
-                                where username = '%s'" %(uui, username,))
-            self.commit()
-    
-
-    def room_swap(self, origin, destination, username):
-        self.change_user_room(username, destination)
-        self.delete_user_from_room(username, origin)
-        self.update_room_characters(destination,username)
-
-                
-    def add_user_to_room(self, user, uui):
-        print("add user to room")
-        in_rooms, room_result = self.in_rooms(uui)
-
-        if (in_rooms == True):
-            users = str(room_result[0][4]) + "[" + str(user) + "]"
-            print(users)
-            self.cur.execute("UPDATE rooms SET characters = '%s' \
-                                where uui = '%s'" %(users, uui,))
-                
-
 #############################################################
 
-################### UPDATE/ADD DATA TO DB ###################
+################### CHANGE/UPDATE DB INFO ###################
 
     def execute_rooms(self, many_new_data):
         '''replace room database data. only to be used internally
@@ -184,10 +158,75 @@ class Database(object):
         self.cur.executemany('REPLACE INTO items VALUES(?, ?, ?, ?)', \
                     (many_new_data,))
         self.commit()
+        
+    
+    def change_user_room(self, username, uui):
+        '''changes location of user from one room to another. updates
+           user entry & updates room user logs'''
+        
+        in_users, user_result = self.in_users(username)
+
+        if (in_users == True):
+            self.cur.execute("UPDATE users SET location = '%s' \
+                                where username = '%s'" %(uui, username,))
+            self.commit()
     
 
+    def room_swap(self, origin, destination, username):
+        '''moves character from one room to another and updates 
+           relevant database entries'''
+        
+        self.change_user_room(username, destination)
+        self.delete_user_from_room(username, origin)
+        self.update_room_characters(destination,username)
+        
+                
+    def update_user_items(self, user, item_name):
+        '''update items in a user's inventory, will add duplicate entries'''
+
+        bool, result = self.in_users(user)
+        if (result[0][4] != ""):
+            item_name = result[0][4] + ", " + item_name
+
+        if (bool == True):
+            self.cur.execute("UPDATE users SET inventory = '%s' \
+                                where username = '%s'" %(item_name,user,))
+            self.commit()
+
+    
+    def update_room_items(self, uui, item):
+        '''update items in a room's inventory'''
+
+        item_name = item.getName()
+        bool, result = self.in_rooms(uui)
+        if (result[0][5] != ""):
+            item_name = result[0][5] + "[" + item_name + "]"
+        
+        if (bool == True):
+            self.cur.execute("UPDATE rooms SET items = '%s' \
+                                where uui = '%s'" %(item_name,uui,))
+
+            
+    def update_room_characters(self, uui, character):
+        '''update characters in a room'''
+        in_rooms, rooms_result = self.in_rooms(uui)
+
+        if character not in rooms_result[0][4]:
+            characters = rooms_result[0][4] + "[" + character + "]"
+
+            if (in_rooms == True):
+                self.cur.execute("UPDATE rooms SET characters = '%s' \
+                                    where uui = '%s'" %(characters, uui,))
+
+                self.commit()
+ 
+#############################################################
+
+################### UPDATE/ADD DATA TO DB ###################
+    
     def add_room(self,data):
         '''attempt to add a single room to the room database'''
+        
         uui, name, description, exits, characters, items = data
         boolean, result = self.in_rooms(uui)
 
@@ -207,6 +246,7 @@ class Database(object):
 
     def add_user(self,user):
         '''attempt to add a single user to the database'''
+        
         username = user.get_name()
         pswd = user.get_pswd()
         desc = user.get_desc()
@@ -248,47 +288,18 @@ class Database(object):
                           visible, in_possession) VALUES (?,?,?,?)", \
                           (name, description, str(visible), \
                            in_possession))
-        self.commit()        
+        self.commit() 
         
-
-    def update_user_items(self, user, item_name):
-        '''update items in a user's inventory, will add duplicate entries'''
-
-        bool, result = self.in_users(user)
-        if (result[0][4] != ""):
-            item_name = result[0][4] + ", " + item_name
-
-        if (bool == True):
-            self.cur.execute("UPDATE users SET inventory = '%s' \
-                                where username = '%s'" %(item_name,user,))
-            self.commit()
-
-    
-    def update_room_items(self, uui, item):
-        '''update items in a room's inventory'''
-
-        item_name = item.getName()
-        bool, result = self.in_rooms(uui)
-        if (result[0][5] != ""):
-            item_name = result[0][5] + "[" + item_name + "]"
         
-        print("item name: " + str(item_name))
-
-        if (bool == True):
-            self.cur.execute("UPDATE rooms SET items = '%s' \
-                                where uui = '%s'" %(item_name,uui,))
-
-    def update_room_characters(self, uui, character):
-        '''update characters in a room'''
-        in_rooms, rooms_result = self.in_rooms(uui)
-
-        print("characters: " + str(rooms_result[0][4]))
+    def add_user_to_room(self, user, uui):
+        '''add character to a room. takes in character name'''
+        
+        in_rooms, room_result = self.in_rooms(uui)
 
         if character not in rooms_result[0][4]:
             characters = rooms_result[0][4] + "[" + character + "]"
 
             if (in_rooms == True):
-                print("character not in room yet")
                 self.cur.execute("UPDATE rooms SET characters = '%s' \
                                     where uui = '%s'" %(characters, uui,))
 
@@ -299,16 +310,19 @@ class Database(object):
 ################ CHECK FOR ROW/CONTENTS IN DB ################
 
     def in_rooms(self, uui):
-        '''check for room existence in database'''
+        '''check for room existence in database. returns boolean and contents
+           of room if it exists'''
+        
         self.cur.execute('SELECT * from rooms WHERE \
                                    uui="%s"'\
                                    %(uui,))
         result = self.cur.fetchall()
-        # print(result)
+        
         if(len(result) > 0):
             return True, result
         else:
             return False, ("Error: room [" + str(uui) + "] not in table")
+    
     
     def in_users(self, username):
         '''check for username match in database'''
@@ -326,8 +340,6 @@ class Database(object):
     def in_items(self, name, in_possession):
         '''check for item in database. can be in possession of a room or a
            user'''
-
-        name, in_possession
 
         self.cur.execute('SELECT * from items WHERE name="%s" AND \
                         in_possession="%s"' %(name, in_possession,))
@@ -426,7 +438,6 @@ class Database(object):
                 direction = str(split[2])
                 room.addNeighbor(identifiers, direction)
 
-            print("print row: " + str(row[0][4]))
             characters = self.retrieve_character(row[0][4])
             
             for character in characters:
@@ -497,7 +508,6 @@ class Database(object):
         '''retrieves items from room DB entry and returns them as a list
            of item objects'''
 
-        # print(room_items)
         res = re.findall(r'\[.*?\]', room_items.strip("").strip(""))
         
         items_db = Database("items.db")
@@ -538,6 +548,8 @@ class Database(object):
 #############################################################
 
     def retrieve_user(self, username):
+        '''retrieve a character object from the user database'''
+        
         in_user, user_data = self.in_users(username)
         if (in_user == True):
             description = user_data[0][2]
