@@ -1,4 +1,4 @@
-
+import asyncio
 
 class Command:
     def __init__(self, name, aliases, callback):
@@ -6,14 +6,15 @@ class Command:
         self.__aliases = aliases
         self.__callback = callback
 
-    def __do_nothing(self, character, args, server) :
+    def __do_nothing(self, connection, args, server) :
+        character = connection.character
         print("Do nothing called by", character, " doing nothing.")
 
-    def execute(self, character, args, server):
+    async def execute(self, character, args, server):
         """
             execute - calls the command
 
-            character - the character who is excecuting the command
+            character - character object of the char excecuting the command
 
             args - the arguments entered by the user
 
@@ -22,7 +23,7 @@ class Command:
         if self.__callback is None:
             self.__do_nothing(character, args, server)
         else:
-            self.__callback(character, args, server)
+            await self.__callback(character, args, server)
 
     def is_this_command(self, word):
         """

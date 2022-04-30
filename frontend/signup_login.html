@@ -20,7 +20,7 @@
       
       <div class="tab-content">
         <div id="signup">   
-          <h1>Welcome to MUD</h1>
+          <h1>Welcome to Winter Garden!</h1>
           
           <form name="myForm1" onsubmit="return signupUser()" action="home.html" method="post">
           
@@ -68,7 +68,7 @@
         </div>
         
         <div id="login">   
-          <h1>Welcome to MUD!</h1>
+          <h1>Welcome to Winter Garden!</h1>
           
           <form name="myForm2" onsubmit="return loginUser()" method="post" action="home.html">
           <!-- <form id="loginform"> -->
@@ -119,12 +119,23 @@
       localStorage.setItem("logName", inputName.value);
       localStorage.setItem("logPass", inputpass.value);
     }
+<<<<<<< HEAD
 
     function logUser() {
       var inputName= document.getElementById("logName");
       var inputpass= document.getElementById("logpaswd");
       localStorage.setItem("logName", inputName.value);
       localStorage.setItem("logPass", inputpass.value);
+=======
+
+    function logUser() {
+      var inputName= document.getElementById("logName");
+      var inputpass= document.getElementById("logpaswd");
+      localStorage.setItem("logName", inputName.value);
+      localStorage.setItem("logPass", inputpass.value);
+
+
+>>>>>>> connect_server_db
     }
 </script>
 

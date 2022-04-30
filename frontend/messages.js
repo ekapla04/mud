@@ -5,7 +5,9 @@ var you = {};
 you.avatar = "";
 
 var websocket = "";
-var commands = ["say", "look", "map", "move", "login"];
+var commands = ["say", "look", "map", "move", "login", "commands", 
+                "challenge", "duel", "block", "strike", "ready",
+                "yes", "no", "y", "n"];
 
 function formatAMPM(date) {
     var hours = date.getHours();
@@ -62,7 +64,7 @@ function verifyInput(text){
     str = text.trim();
     strs = str.split(" ");
     console.log(str.slice(0,4));
-    if ((strs.length > 1 && commands.includes(strs[0])) || commands.includes(str.slice(0,4))){
+    if ((strs.length > 1 && commands.includes(strs[0])) || commands.includes(str.slice(0,4)) || commands.includes(str)){
         // console.log(strs);
         return true
         
@@ -116,7 +118,16 @@ window.addEventListener("DOMContentLoaded", () => {
             }
             
         } else if (data["type"] === "map"){
-            console.log("Display map", data["texts"]);
+            console.log("Display map", data["text"]);
+            $(".mapper .scndCol").html(data["text"]);
+         } else if (data["type"] === "err") {
+             msg = data["text"].slice(0,9)
+             if (msg == "Bad login"){
+                document.location.replace("./signup_login.html");
+                alert("The pass word you entered was invalid, or the character name \
+was already taken. :(")
+             }
+         
         } else {
             console.log("Error: ", data["text"]);
         }
