@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SOCKET TEST</title>
+</head>
+<body>
+    <!-- Import jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+
+    <div id="mainwindow">
+        <div id="output">
+        </div>
+        <div id="inputline">
+            <input type="text" name="messagebox">
+            <input type="submit" name="submit" value="submit">
+        </div>
+    </div>
+    
+    <style type="text/css">
+        *{
+            font-family: monospace;
+            white-space:pre-wrap;
+            line-height: 0.75;
+        }
+
+        #mainwindow{
+            display: flex;
+            justify-content: center;
+            flex-flow: column;
+            background-color: #66999B;
+        }
+        #output {
+            flex-flow: column;
+            overflow: scroll;
+            height: 500px;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        #output p{
+            overflow-wrap: break-word;
+            padding-left: 20px;
+            padding-right: 20px;
+            padding-top: 3px;
+            padding-bottom: 3px;
+            border-radius: 5px;
+        }
+        .from_server {
+            background-color: #2B3A67;
+            color: #FFEAD3;
+        }
+        .from_me {
+            background-color: #496A81;
+            color: #BCE5D0;
+        }
+        #inputline {
+            display: flex;
+            flex-flow:row;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 5px;
+
+        }
+        [name="messagebox"] {
+            width: 80%;
+        }
+        
+    </style>
+
+
+    <script type="text/javascript" charset="utf-8">
+        $(document).ready(function() {
+            const websocket = new WebSocket("ws://localhost:8001/");
+
+            var outlog = $("#output")
+            var in_line = $("[name=messagebox]")
+
+            function send_message() {
+                var msg = in_line.val()
+                in_line.val("")
+
+                if (msg == "") {return;}
+
+                outlog.append(`<p class='from_me'>${msg}</p>`)
+
+                websocket.send(msg)
+                console.log("sendifyed")
+            }
+
+            function receive_message(msg){
+                var data = JSON.parse(msg["data"]);
+                outlog.append(`<p class='from_server'>${data["text"]}</p>`)
+            }
+
+            $("[name=submit]").click(send_message);
+
+            $("[name=messagebox]").keypress(function(event){
+                var keycode = (event.keyCode ? event.keyCode : event.which);
+                if(keycode == '13'){ send_message(); }
+            });
+
+            websocket.onmessage = receive_message;
+
+        });
+
+    </script>
+
+
+</body>
+</html>

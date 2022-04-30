@@ -4,7 +4,7 @@
 '''
 from threading import Lock
 import uuid
-from room import Room
+from src.room import Room
 
 class Map:
     def __init__(self):
@@ -38,6 +38,22 @@ class Map:
 
         return "Success"
 
+    def addRoom(self, room):
+        """
+            Adds the given room object to the map
+        """
+        result = ""
+        with self.__mutex:
+                
+            if room.getUniqueID() not in self.__rooms.keys():
+                self.__rooms[room.getUniqueID()] = room
+                result = "Success"
+            else:
+                result = "Error: Cannot duplicate rooms"
+
+        return result
+
+
     '''
         Need to discuss all other methods needed for map
     '''
@@ -68,3 +84,35 @@ class Map:
             roomid  - string, name of room
         """
         pass
+
+
+    def linkExits(self):
+        """
+            Link exits to room objects by id
+            Call after loading rooms from the db
+        """
+        with self.__mutex:
+            for room in self.__rooms.values():
+
+                exits = room.getExits()
+                newexits = {}
+                to_remove = set()
+
+                for name, dest in exits.items():
+                    # Only try to link the exits if the destination is a string
+                    name = name.strip()
+                    if isinstance(dest, str):
+                        dest_id = dest.split(" ")[0].lower()
+
+                        dest = self.__rooms.get(dest_id)
+                        if dest is None:
+                            to_remove.add(name)
+                        else:
+                            newexits[name] = dest
+
+                # Remove exits that do appear in the map 
+                for item in to_remove:
+                    exits.pop(item)
+
+                # Set the exits to the fixed things
+                room.setAllExits(newexits)

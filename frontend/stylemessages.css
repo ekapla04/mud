@@ -1,3 +1,7 @@
+* {
+  font-family: 'Manjari', sans-serif;
+}
+
 .mytext{
   border:0;padding:10px;background:whitesmoke;
   font-size: x-large;
@@ -49,7 +53,8 @@
 }
 
 body {
-  background-image: url('./images/back1.jpg');
+  /*background-image: url('./images/back1.jpg');*/
+  background-color: #192138;
   background-repeat: no-repeat;
   background-size: cover;
   max-width: 100%;
@@ -135,7 +140,10 @@ input:focus{
   background-size: cover
 } */
 
-.messaging { background: rgb(73, 72, 72);}
+.messaging { 
+  background: rgb(77, 83, 102);
+  border-radius: 10px;
+}
 
 /* .textbox {
   padding-bottom: 5px;
@@ -149,11 +157,12 @@ input:focus{
 /* }  */
 
 .heading {
-  color: #ffac07;
+  color: #60b0e6;
   margin: 20px;
   font-weight: 1000;
   font-size: 5em;
-  font-family:Lucida Handwriting;
+  /*font-family:Lucida Handwriting;*/
+  font-family: 'Manjari', sans-serif;
   text-align: center;
 }
 
@@ -171,17 +180,21 @@ input:focus{
 }
 
 .mapper {
-  background-color: #917c53;
+  background-color: rgb(77, 83, 102);
   height: 20rem;
   overflow: hidden;
-  background-image: url('./images/back2.jpg');
+  /*background-image: url('./images/back2.jpg');*/
   background-repeat: no-repeat;
   background-size: cover;
+  border-radius: 10px;
+  white-space:pre;
+  line-height: 0.75;
 }
 
 .scndCol {
   text-align: center;
-  color: #ffac07;
+  color: #60b0e6;
+  font-family: ' Lucida Console', monospace;
 }
 
 .gchild2 {

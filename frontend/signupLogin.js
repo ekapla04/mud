@@ -1,7 +1,6 @@
 // Code By Webdevtrick ( https://webdevtrick.com )
 /* Edited by Mico */
 $('.form').find('input, textarea').on('keyup blur focus', function (e) {
-  console.log("in find");
     var $this = $(this),
         label = $this.prev('label');
   
@@ -29,7 +28,6 @@ $('.form').find('input, textarea').on('keyup blur focus', function (e) {
   });
 
   $('.form').find('select, textarea').on('keyup blur focus', function (e) {
-    console.log("in find");
       var $this = $(this),
           label = $this.prev('label');
     
@@ -78,6 +76,11 @@ $('.form').find('input, textarea').on('keyup blur focus', function (e) {
   */
   function loginUser(){
     console.log("login user");
+
+    // var loginUsername = localStorage.getItem("logName");
+    // var loginPass = localStorage.getItem("logPass");
+    // console.log("signup user", loginUsername, loginPass);
+
     return true;
   }
 
@@ -86,14 +89,10 @@ $('.form').find('input, textarea').on('keyup blur focus', function (e) {
     return true if you succeed or false otherwise
   */
   function signupUser(){
+    // var loginUsername = localStorage.getItem("name");
+    // var loginPass = localStorage.getItem("pass");
     console.log("signup user");
     return true;
   }
-  window.addEventListener("DOMContentLoaded", () => {
-    // Open the WebSocket connection and register event handlers.
-    // const websocket = new WebSocket("ws://localhost:8001/");
-    // initChat(websocket);
-    // receiveWebsocketMessage(websocket);
-    // loginUser();
-    
-  });
+
+  
